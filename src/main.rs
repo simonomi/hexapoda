@@ -1,5 +1,8 @@
-use std::{borrow::Cow, env, fs::File, io::Read, mem, process::exit};
-use crossterm::event::{self, Event};
+#![warn(clippy::pedantic, clippy::nursery)]
+#![allow(clippy::cast_possible_truncation)]
+
+use std::{borrow::Cow, cmp::min, env, fs::File, io::Read, mem, process::exit};
+use crossterm::event::{self, Event, KeyCode, KeyModifiers};
 use itertools::Itertools;
 use ratatui::{style::{Color, Style}, text::{Line, Span, Text}, widgets::Widget};
 
@@ -9,7 +12,7 @@ fn main() {
 	
 	while !app.should_quit {
 		terminal.draw(|frame| {
-			frame.render_widget(&app, frame.area())
+			frame.render_widget(&app, frame.area());
 		}).unwrap();
 		
 		app.handle_events();
@@ -27,7 +30,7 @@ struct App {
 }
 
 impl App {
-	fn init() -> App {
+	fn init() -> Self {
 		let input_files: Vec<_> = env::args().skip(1).collect();
 		
 		if input_files.is_empty() {
@@ -43,7 +46,7 @@ impl App {
 		let mut contents = Vec::new();
 		file.unwrap().read_to_end(&mut contents).unwrap();
 		
-		App {
+		Self {
 			contents,
 			scroll_position: 0,
 			// cursor_position: 0,
@@ -52,8 +55,20 @@ impl App {
 	}
 	
 	fn handle_events(&mut self) {
-		if matches!(event::read().unwrap(), Event::Key(_)) {
-			self.should_quit = true;
+		match event::read().unwrap() {
+			Event::Key(key_event) if key_event.code == KeyCode::Char('q') => {
+				self.should_quit = true;
+			}
+			Event::Key(key_event) if key_event.code == KeyCode::Char('e') &&
+			                         key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+				let max_scroll_position = self.contents.len() - 0x50;
+				self.scroll_position = min(self.scroll_position + BYTES_PER_LINE, max_scroll_position);
+			}
+			Event::Key(key_event) if key_event.code == KeyCode::Char('y') &&
+			                         key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+				self.scroll_position = self.scroll_position.saturating_sub(BYTES_PER_LINE);
+			}
+			_ => {}
 		}
 	}
 }
@@ -63,8 +78,10 @@ const BYTES_PER_LINE: usize = 0x10;
 impl Widget for &App {
 	fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
 		let screen_end = self.scroll_position + BYTES_PER_LINE * (area.height as usize);
+		let bytes_end = min(screen_end, self.contents.len());
 		
-		let bytes_to_render = &self.contents[self.scroll_position..screen_end];
+		// TODO: bounds check this
+		let bytes_to_render = &self.contents[self.scroll_position..bytes_end];
 		
 		let (chunks, remainder) = bytes_to_render
 			.as_chunks::<BYTES_PER_LINE>();
@@ -73,7 +90,8 @@ impl Widget for &App {
 		
 		let lines: Vec<_> = chunks
 			.iter()
-			.map(render_line)
+			.zip((self.scroll_position..).step_by(BYTES_PER_LINE))
+			.map(|(bytes, address)| render_line(address, bytes))
 			.collect();
 		
 		let text = Text::from(lines);
@@ -82,25 +100,36 @@ impl Widget for &App {
 	}
 }
 
-fn render_line(bytes: &[u8; BYTES_PER_LINE]) -> Line {
+#[allow(mismatched_lifetime_syntaxes)]
+fn render_line(address: usize, bytes: &[u8; BYTES_PER_LINE]) -> Line {
 	let (chunks, remainder) = bytes.as_chunks::<BYTES_PER_CHUNK>();
 	
 	assert!(remainder.is_empty());
 	
 	#[allow(unstable_name_collisions)]
-	let spans: Vec<_> = chunks
+	let mut spans: Vec<Span<'_>> = chunks
 		.iter()
+		.copied()
 		.map(render_chunk)
 		.intersperse(vec!["  ".into()])
 		.flatten()
 		.collect();
 	
+	spans.insert(0, render_address(address));
+	
 	Line::from(spans)
+}
+
+fn render_address(address: usize) -> Span<'static> {
+	Span {
+		style: Style::new().fg(Color::Rgb(138, 187, 195)),
+		content: format!("{:08x}  ", address).into()
+	}
 }
 
 const BYTES_PER_CHUNK: usize = 4;
 
-fn render_chunk(bytes: &[u8; BYTES_PER_CHUNK]) -> Vec<Span<'static>> {
+fn render_chunk(bytes: [u8; BYTES_PER_CHUNK]) -> Vec<Span<'static>> {
 	#[allow(unstable_name_collisions)]
 	bytes
 		.iter()
@@ -115,7 +144,7 @@ trait HasCardinality {
 }
 
 impl HasCardinality for u8 {
-	const CARDINALITY: usize = 2usize.pow(u8::BITS);
+	const CARDINALITY: usize = 2usize.pow(Self::BITS);
 }
 
 fn byte_as_span(byte: u8) -> Span<'static> {

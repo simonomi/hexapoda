@@ -8,7 +8,7 @@ mod widget;
 #[derive(Debug)]
 pub struct App {
 	pub contents: Vec<u8>,
-	pub window_rows: u16,
+	pub window_rows: usize,
 	pub scroll_position: usize,
 	pub cursor: Cursor,
 	pub should_quit: bool
@@ -33,7 +33,7 @@ impl App {
 		
 		Self {
 			contents,
-			window_rows: window_size().unwrap().rows,
+			window_rows: window_size().unwrap().rows as usize,
 			scroll_position: 0,
 			cursor: Cursor::default(),
 			should_quit: false
@@ -45,7 +45,7 @@ impl App {
 		#[allow(clippy::collapsible_match)]
 		match event::read().unwrap() {
 			Event::Resize(_, height) => {
-				self.window_rows = height;
+				self.window_rows = height as usize;
 			}
 			Event::Key(key_event) if key_event.code == KeyCode::Char('q') => {
 				self.should_quit = true;
@@ -56,94 +56,127 @@ impl App {
 					self.scroll_position + BYTES_PER_LINE,
 					self.contents.len() - (5 * BYTES_PER_LINE)
 				);
+				self.cursor.clamp(self.scroll_position, self.window_rows);
 			}
 			Event::Key(key_event) if key_event.modifiers.contains(KeyModifiers::CONTROL) &&
 			                         key_event.code == KeyCode::Char('y') => {
 				self.scroll_position = self.scroll_position.saturating_sub(BYTES_PER_LINE);
+				self.cursor.clamp(self.scroll_position, self.window_rows);
 			}
 			Event::Key(key_event) if key_event.modifiers.contains(KeyModifiers::CONTROL) &&
 			                         key_event.code == KeyCode::Char('d') => {
 				self.scroll_position = min(
-					self.scroll_position + ((self.window_rows / 2) as usize * BYTES_PER_LINE),
+					self.scroll_position + ((self.window_rows / 2) * BYTES_PER_LINE),
 					self.contents.len() - (5 * BYTES_PER_LINE)
 				);
+				self.cursor.clamp(self.scroll_position, self.window_rows);
 			}
 			Event::Key(key_event) if key_event.modifiers.contains(KeyModifiers::CONTROL) &&
 			                         key_event.code == KeyCode::Char('u') => {
 				self.scroll_position = self.scroll_position.saturating_sub(
-					(self.window_rows / 2) as usize * BYTES_PER_LINE
+					(self.window_rows / 2) * BYTES_PER_LINE
 				);
+				self.cursor.clamp(self.scroll_position, self.window_rows);
 			}
 			Event::Key(key_event) if key_event.modifiers.contains(KeyModifiers::CONTROL) &&
 			                         key_event.code == KeyCode::Char('f') => {
 				self.scroll_position = min(
-					self.scroll_position + (self.window_rows as usize * BYTES_PER_LINE),
+					self.scroll_position + (self.window_rows * BYTES_PER_LINE),
 					self.contents.len() - (5 * BYTES_PER_LINE)
 				);
+				self.cursor.clamp(self.scroll_position, self.window_rows);
 			}
 			Event::Key(key_event) if key_event.modifiers.contains(KeyModifiers::CONTROL) &&
 			                         key_event.code == KeyCode::Char('b') => {
 				self.scroll_position = self.scroll_position.saturating_sub(
-					self.window_rows as usize * BYTES_PER_LINE
+					self.window_rows * BYTES_PER_LINE
 				);
+				self.cursor.clamp(self.scroll_position, self.window_rows);
 			}
 			Event::Key(key_event) if key_event.code == KeyCode::Char('i') => {
-				if self.cursor.head >= 0x10 {
-					self.cursor.head -= 0x10;
+				if self.cursor.head >= BYTES_PER_LINE {
+					self.cursor.head -= BYTES_PER_LINE;
 					self.cursor.collapse();
+					
+					self.clamp_screen_to_cursor();
 				}
 			}
 			Event::Key(key_event) if key_event.code == KeyCode::Char('j') => {
 				if self.cursor.head >= 1 {
 					self.cursor.head -= 1;
 					self.cursor.collapse();
+					
+					self.clamp_screen_to_cursor();
 				}
 			}
 			Event::Key(key_event) if key_event.code == KeyCode::Char('k') => {
-				if self.contents.len() - 1 - self.cursor.head >= 0x10 {
-					self.cursor.head += 0x10;
+				if self.contents.len() - 1 - self.cursor.head >= BYTES_PER_LINE {
+					self.cursor.head += BYTES_PER_LINE;
 					self.cursor.collapse();
+					
+					self.clamp_screen_to_cursor();
 				}
 			}
 			Event::Key(key_event) if key_event.code == KeyCode::Char('l') => {
 				if self.contents.len() - 1 - self.cursor.head >= 1 {
 					self.cursor.head += 1;
 					self.cursor.collapse();
+					
+					self.clamp_screen_to_cursor();
 				}
 			}
 			Event::Key(key_event) if key_event.code == KeyCode::Char('I') => {
-				if self.cursor.head >= 0x10 {
-					self.cursor.head -= 0x10;
+				if self.cursor.head >= BYTES_PER_LINE {
+					self.cursor.head -= BYTES_PER_LINE;
+					
+					self.clamp_screen_to_cursor();
 				}
 			}
 			Event::Key(key_event) if key_event.code == KeyCode::Char('J') => {
 				if self.cursor.head >= 1 {
 					self.cursor.head -= 1;
+					
+					self.clamp_screen_to_cursor();
 				}
 			}
 			Event::Key(key_event) if key_event.code == KeyCode::Char('K') => {
-				if self.contents.len() - 1 - self.cursor.head >= 0x10 {
-					self.cursor.head += 0x10;
+				if self.contents.len() - 1 - self.cursor.head >= BYTES_PER_LINE {
+					self.cursor.head += BYTES_PER_LINE;
+					
+					self.clamp_screen_to_cursor();
 				}
 			}
 			Event::Key(key_event) if key_event.code == KeyCode::Char('L') => {
 				if self.contents.len() - 1 - self.cursor.head >= 1 {
 					self.cursor.head += 1;
+					
+					self.clamp_screen_to_cursor();
 				}
 			}
 			Event::Key(key_event) if key_event.code == KeyCode::Char('w') => {
 				self.cursor.move_to_next_word(self.contents.len() - 1);
+				self.clamp_screen_to_cursor();
 			}
 			Event::Key(key_event) if key_event.code == KeyCode::Char('e') => {
 				self.cursor.move_to_next_end(self.contents.len() - 1);
+				self.clamp_screen_to_cursor();
 			}
 			Event::Key(key_event) if key_event.code == KeyCode::Char('b') => {
 				self.cursor.move_to_previous_beginning();
+				self.clamp_screen_to_cursor();
 			}
 			Event::Key(key_event) if key_event.code == KeyCode::Char(';') => {
 				self.cursor.collapse();
 			}
 			_ => {}
+		}
+	}
+	
+	const fn clamp_screen_to_cursor(&mut self) {
+		if self.cursor.head < self.scroll_position {
+			self.scroll_position -= BYTES_PER_LINE;
+		} else if self.cursor.head > self.scroll_position + (self.window_rows * BYTES_PER_LINE) - 1 {
+			self.scroll_position += BYTES_PER_LINE;
 		}
 	}
 }

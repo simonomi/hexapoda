@@ -1,3 +1,5 @@
+use crate::BYTES_PER_LINE;
+
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Cursor {
 	pub head: usize,
@@ -29,6 +31,13 @@ impl Cursor {
 	
 	pub const fn collapse(&mut self) {
 		self.tail = self.head;
+	}
+	
+	pub fn clamp(&mut self, scroll_position: usize, window_rows: usize) {
+		let max_row = scroll_position + window_rows * BYTES_PER_LINE - 1;
+		
+		self.head = self.head.clamp(scroll_position, max_row);
+		self.tail = self.tail.clamp(scroll_position, max_row);
 	}
 	
 	pub fn move_to_next_word(&mut self, max: usize) {

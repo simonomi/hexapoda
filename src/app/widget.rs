@@ -26,6 +26,10 @@ impl Widget for &App {
 		
 		let status_line_area = Rect::new(area.x, area.bottom() - 1, area.width, 1);
 		self.render_status_line().render(status_line_area, buf);
+		
+		self.render_extra_statuses()
+			.right_aligned()
+			.render(status_line_area, buf);
 	}
 }
 
@@ -280,6 +284,24 @@ mod status_line {
 		
 		fn render_file_name(&self) -> Span<'_> {
 			Span::from(&self.file_name)
+		}
+	}
+}
+
+mod extra_statuses {
+	use crate::app::{App, PartialAction};
+	use ratatui::text::Line;
+	
+	impl App {
+		pub fn render_extra_statuses(&self) -> Line<'_> {
+			#[allow(clippy::cast_precision_loss)]
+			let percentage = self.cursor.head as f64 / (self.contents.len() - 1) as f64 * 100.0;
+			
+			let partial_action = self.partial_action
+				.as_ref()
+				.map_or("", PartialAction::label);
+			
+			format!("{partial_action} {percentage:.0}% ").into()
 		}
 	}
 }

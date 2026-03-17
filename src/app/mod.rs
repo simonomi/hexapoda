@@ -15,7 +15,7 @@ pub struct App {
 	pub cursor: Cursor,
 	pub should_quit: bool,
 	pub mode: Mode,
-	pub partial_shortcut: Option<PartialShortcut>,
+	pub partial_action: Option<PartialAction>,
 	pub logs: Vec<String>,
 }
 
@@ -25,7 +25,7 @@ pub enum Mode {
 }
 
 #[derive(Debug)]
-pub enum PartialShortcut {
+pub enum PartialAction {
 	Goto, Zview
 }
 
@@ -43,6 +43,15 @@ impl Mode {
 			Self::Normal => Color::Blue,
 			Self::Select => Color::Yellow,
 			Self::Insert => Color::Green,
+		}
+	}
+}
+
+impl PartialAction {
+	pub const fn label(&self) -> &'static str {
+		match self {
+			Self::Goto => "g",
+			Self::Zview => "z",
 		}
 	}
 }
@@ -73,7 +82,7 @@ impl App {
 			cursor: Cursor::default(),
 			should_quit: false,
 			mode: Mode::Normal,
-			partial_shortcut: None,
+			partial_action: None,
 			logs: Vec::new(),
 		}
 	}
@@ -86,7 +95,7 @@ impl App {
 	#[allow(clippy::too_many_lines)]
 	pub fn handle_events(&mut self) {
 		#[allow(clippy::collapsible_match)]
-		match (&self.mode, event::read().unwrap(), &self.partial_shortcut) {
+		match (&self.mode, event::read().unwrap(), &self.partial_action) {
 			(Mode::Normal, Event::Resize(_, height), _) => {
 				// -1 because of the status line
 				self.window_rows = height as usize - 1;
@@ -121,7 +130,7 @@ impl App {
 				let tail_offset = self.cursor.tail - self.scroll_position;
 				
 				self.scroll_position = min(
-					self.scroll_position + self.screen_size() / 2,
+					self.scroll_position + (self.screen_size() / 2).next_multiple_of(BYTES_PER_LINE),
 					self.contents.len() - (5 * BYTES_PER_LINE)
 				);
 				
@@ -136,7 +145,7 @@ impl App {
 				let tail_offset = self.cursor.tail - self.scroll_position;
 				
 				self.scroll_position = self.scroll_position.saturating_sub(
-					self.screen_size() / 2
+					(self.screen_size() / 2).next_multiple_of(BYTES_PER_LINE)
 				);
 				
 				self.cursor.head = (self.scroll_position + head_offset).min(self.contents.len() - 1);
@@ -164,12 +173,12 @@ impl App {
 			
 			(Mode::Normal, Event::Key(key_event), None)
 			   if key_event.code == KeyCode::Char('g') => {
-				self.partial_shortcut = Some(PartialShortcut::Goto);
+				self.partial_action = Some(PartialAction::Goto);
 			}
 			
-			(Mode::Normal, Event::Key(key_event), Some(PartialShortcut::Goto))
+			(Mode::Normal, Event::Key(key_event), Some(PartialAction::Goto))
 			   if key_event.code == KeyCode::Char('g') => {
-				self.partial_shortcut = None;
+				self.partial_action = None;
 				self.cursor.head %= BYTES_PER_LINE;
 				self.cursor.collapse();
 				self.clamp_screen_to_cursor();
@@ -187,7 +196,7 @@ impl App {
 			(Mode::Normal, Event::Key(key_event), None)
 			   if key_event.code == KeyCode::Char('i') ||
 			   key_event.code == KeyCode::Up => {
-				self.partial_shortcut = None;
+				self.partial_action = None;
 				if self.cursor.head >= BYTES_PER_LINE {
 					self.cursor.head -= BYTES_PER_LINE;
 					self.cursor.collapse();
@@ -207,10 +216,10 @@ impl App {
 				}
 			}
 			
-			(Mode::Normal, Event::Key(key_event), Some(PartialShortcut::Goto))
+			(Mode::Normal, Event::Key(key_event), Some(PartialAction::Goto))
 			   if key_event.code == KeyCode::Char('j') ||
 			   key_event.code == KeyCode::Left => {
-				self.partial_shortcut = None;
+				self.partial_action = None;
 				self.cursor.head -= self.cursor.head % BYTES_PER_LINE;
 				self.cursor.collapse();
 			}
@@ -237,10 +246,10 @@ impl App {
 				}
 			}
 			
-			(Mode::Normal, Event::Key(key_event), Some(PartialShortcut::Goto))
+			(Mode::Normal, Event::Key(key_event), Some(PartialAction::Goto))
 			   if key_event.code == KeyCode::Char('l') ||
 			   key_event.code == KeyCode::Right => {
-				self.partial_shortcut = None;
+				self.partial_action = None;
 				self.cursor.head += BYTES_PER_LINE - 1 - (self.cursor.head % BYTES_PER_LINE);
 				self.cursor.collapse();
 			}
@@ -270,7 +279,7 @@ impl App {
 			
 			(Mode::Normal, Event::Key(_), Some(_)) => {
 				self.logs.push("key press!".to_string());
-				self.partial_shortcut = None;
+				self.partial_action = None;
 			}
 			
 			_ => {}

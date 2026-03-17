@@ -26,7 +26,7 @@ pub enum Mode {
 
 #[derive(Debug)]
 pub enum PartialAction {
-	Goto, Zview
+	Goto, Zview, Replace
 }
 
 impl Mode {
@@ -52,6 +52,7 @@ impl PartialAction {
 		match self {
 			Self::Goto => "g",
 			Self::Zview => "z",
+			Self::Replace => "r",
 		}
 	}
 }
@@ -194,6 +195,16 @@ impl App {
 			}
 			
 			(Mode::Normal, Event::Key(key_event), None)
+			   if key_event.code == KeyCode::Char('z') => {
+				self.partial_action = Some(PartialAction::Zview);
+			}
+			
+			(Mode::Normal, Event::Key(key_event), Some(PartialAction::Zview))
+			   if key_event.code == KeyCode::Char('z') => {
+				self.partial_action = None;
+			}
+			
+			(Mode::Normal, Event::Key(key_event), None)
 			   if key_event.code == KeyCode::Char('i') ||
 			   key_event.code == KeyCode::Up => {
 				self.partial_action = None;
@@ -278,7 +289,6 @@ impl App {
 			}
 			
 			(Mode::Normal, Event::Key(_), Some(_)) => {
-				self.logs.push("key press!".to_string());
 				self.partial_action = None;
 			}
 			

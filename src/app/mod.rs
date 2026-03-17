@@ -1,5 +1,5 @@
 use std::{cmp::min, env, fs::File, io::Read, process::exit};
-use crossterm::event::{self, Event, KeyCode, KeyModifiers};
+use crossterm::{event::{self, Event, KeyCode, KeyModifiers}, terminal::window_size};
 
 use crate::{BYTES_PER_LINE, cursor::Cursor};
 
@@ -8,6 +8,7 @@ mod widget;
 #[derive(Debug)]
 pub struct App {
 	pub contents: Vec<u8>,
+	pub window_rows: u16,
 	pub scroll_position: usize,
 	pub cursor: Cursor,
 	pub should_quit: bool
@@ -32,26 +33,59 @@ impl App {
 		
 		Self {
 			contents,
+			window_rows: window_size().unwrap().rows,
 			scroll_position: 0,
 			cursor: Cursor::default(),
 			should_quit: false
 		}
 	}
 	
+	#[allow(clippy::too_many_lines)]
 	pub fn handle_events(&mut self) {
 		#[allow(clippy::collapsible_match)]
 		match event::read().unwrap() {
+			Event::Resize(_, height) => {
+				self.window_rows = height;
+			}
 			Event::Key(key_event) if key_event.code == KeyCode::Char('q') => {
 				self.should_quit = true;
 			}
 			Event::Key(key_event) if key_event.modifiers.contains(KeyModifiers::CONTROL) &&
 			                         key_event.code == KeyCode::Char('e') => {
-				let max_scroll_position = self.contents.len() - 0x50;
-				self.scroll_position = min(self.scroll_position + BYTES_PER_LINE, max_scroll_position);
+				self.scroll_position = min(
+					self.scroll_position + BYTES_PER_LINE,
+					self.contents.len() - (5 * BYTES_PER_LINE)
+				);
 			}
 			Event::Key(key_event) if key_event.modifiers.contains(KeyModifiers::CONTROL) &&
 			                         key_event.code == KeyCode::Char('y') => {
 				self.scroll_position = self.scroll_position.saturating_sub(BYTES_PER_LINE);
+			}
+			Event::Key(key_event) if key_event.modifiers.contains(KeyModifiers::CONTROL) &&
+			                         key_event.code == KeyCode::Char('d') => {
+				self.scroll_position = min(
+					self.scroll_position + ((self.window_rows / 2) as usize * BYTES_PER_LINE),
+					self.contents.len() - (5 * BYTES_PER_LINE)
+				);
+			}
+			Event::Key(key_event) if key_event.modifiers.contains(KeyModifiers::CONTROL) &&
+			                         key_event.code == KeyCode::Char('u') => {
+				self.scroll_position = self.scroll_position.saturating_sub(
+					(self.window_rows / 2) as usize * BYTES_PER_LINE
+				);
+			}
+			Event::Key(key_event) if key_event.modifiers.contains(KeyModifiers::CONTROL) &&
+			                         key_event.code == KeyCode::Char('f') => {
+				self.scroll_position = min(
+					self.scroll_position + (self.window_rows as usize * BYTES_PER_LINE),
+					self.contents.len() - (5 * BYTES_PER_LINE)
+				);
+			}
+			Event::Key(key_event) if key_event.modifiers.contains(KeyModifiers::CONTROL) &&
+			                         key_event.code == KeyCode::Char('b') => {
+				self.scroll_position = self.scroll_position.saturating_sub(
+					self.window_rows as usize * BYTES_PER_LINE
+				);
 			}
 			Event::Key(key_event) if key_event.code == KeyCode::Char('i') => {
 				if self.cursor.head >= 0x10 {

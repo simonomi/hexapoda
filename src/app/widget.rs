@@ -53,7 +53,7 @@ mod address {
 }
 
 mod hex {
-	use std::{borrow::Cow, iter, mem};
+	use std::{borrow::Cow, mem};
 	use itertools::Itertools;
 	use ratatui::{style::{Color, Style, Stylize}, text::Span};
 	

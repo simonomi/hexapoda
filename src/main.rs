@@ -1,7 +1,7 @@
 #![warn(clippy::pedantic, clippy::nursery)]
 #![allow(clippy::cast_possible_truncation)]
 
-use std::{borrow::Cow, cmp::min, env, fs::File, io::Read, mem, process::exit};
+use std::{borrow::Cow, cmp::min, env, fs::File, io::Read, iter, mem, process::exit};
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
 use itertools::Itertools;
 use ratatui::{style::{Color, Style}, text::{Line, Span, Text}, widgets::Widget};
@@ -102,20 +102,11 @@ impl Widget for &App {
 
 #[allow(mismatched_lifetime_syntaxes)]
 fn render_line(address: usize, bytes: &[u8; BYTES_PER_LINE]) -> Line {
-	let (chunks, remainder) = bytes.as_chunks::<BYTES_PER_CHUNK>();
-	
-	assert!(remainder.is_empty());
-	
-	#[allow(unstable_name_collisions)]
-	let mut spans: Vec<Span<'_>> = chunks
-		.iter()
-		.copied()
-		.map(render_chunk)
-		.intersperse(vec!["  ".into()])
-		.flatten()
+	let spans: Vec<Span<'_>> = iter::once(render_address(address))
+		.chain(render_chunks(bytes))
+		.chain(iter::once("  ".into()))
+		.chain(render_character_panel(bytes))
 		.collect();
-	
-	spans.insert(0, render_address(address));
 	
 	Line::from(spans)
 }
@@ -123,7 +114,68 @@ fn render_line(address: usize, bytes: &[u8; BYTES_PER_LINE]) -> Line {
 fn render_address(address: usize) -> Span<'static> {
 	Span {
 		style: Style::new().fg(Color::Rgb(138, 187, 195)),
-		content: format!("{:08x}  ", address).into()
+		content: format!("{address:08x}  ").into()
+	}
+}
+
+fn render_chunks(bytes: &[u8; BYTES_PER_LINE]) -> impl IntoIterator<Item=Span<'static>> {
+	let (chunks, remainder) = bytes.as_chunks::<BYTES_PER_CHUNK>();
+	
+	assert!(remainder.is_empty());
+	
+	#[allow(unstable_name_collisions)]
+	chunks
+		.iter()
+		.copied()
+		.map(render_chunk)
+		.intersperse(vec!["  ".into()])
+		.flatten()
+}
+
+fn render_character_panel(bytes: &[u8; BYTES_PER_LINE]) -> impl IntoIterator<Item=Span<'static>> {
+	bytes
+		.iter()
+		.copied()
+		.map(render_byte_as_character)
+}
+
+fn render_byte_as_character(byte: u8) -> Span<'static> {
+	const SPAN_FOR_BYTE: [Span; u8::CARDINALITY] = create_byte_character_lookup_table();
+	
+	SPAN_FOR_BYTE[byte as usize].clone()
+}
+
+const fn create_byte_character_lookup_table() -> [Span<'static>; u8::CARDINALITY] {
+	let mut result = [const { empty_span() }; u8::CARDINALITY];
+	
+	let mut index = 0;
+	while index < u8::CARDINALITY {
+		result[index].style = Style::new().fg(fg_for_byte_as_character(index as u8));
+		mem::forget(mem::replace(&mut result[index].content, content_for_character(index as u8)));
+		index += 1;
+	}
+	
+	result
+}
+
+const fn content_for_character(byte: u8) -> Cow<'static, str> {
+	Cow::Borrowed(character_for_byte(byte))
+}
+
+const fn character_for_byte(byte: u8) -> &'static str {
+	const LOOK_UP_TABLE: [&str; u8::CARDINALITY] = ["⋄", "•", "•", "•", "•", "•", "•", "•", "•", "→", "⏎", "•", "•", "␍", "•", "•", "•", "•", "•", "•", "•", "•", "•", "•", "•", "•", "•", "•", "•", "•", "•", "•", " ", "!", "\"", "#", "$", "%", "&", "'", "(", ")", "*", "+", ",", "-", ".", "/", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=", ">", "?", "@", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "[", "\\", "]", "^", "_", "`", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "{", "|", "}", "~", "•", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "×", "╳"];
+	
+	LOOK_UP_TABLE[byte as usize]
+}
+
+const fn fg_for_byte_as_character(byte: u8) -> Color {
+	match byte {
+		b'\0' => Color::Rgb(0xa0, 0xa0, 0xa0),
+		b'\t' | b'\n' | b'\r' | b' ' => Color::Rgb(0xfc, 0x6a, 0x5d),
+		_ if byte.is_ascii_graphic() => Color::Rgb(0xfc, 0x6a, 0x5d),
+		_ if byte.is_ascii() => Color::Rgb(0x50, 0xfa, 0x7b),
+		0xFF => Color::White,
+		_ => Color::Rgb(0xf1, 0xfa, 0x8c),
 	}
 }
 
@@ -134,7 +186,7 @@ fn render_chunk(bytes: [u8; BYTES_PER_CHUNK]) -> Vec<Span<'static>> {
 	bytes
 		.iter()
 		.copied()
-		.map(byte_as_span)
+		.map(render_byte)
 		.intersperse(" ".into())
 		.collect()
 }
@@ -147,7 +199,7 @@ impl HasCardinality for u8 {
 	const CARDINALITY: usize = 2usize.pow(Self::BITS);
 }
 
-fn byte_as_span(byte: u8) -> Span<'static> {
+fn render_byte(byte: u8) -> Span<'static> {
 	const SPAN_FOR_BYTE: [Span; u8::CARDINALITY] = create_lookup_table();
 	
 	SPAN_FOR_BYTE[byte as usize].clone()

@@ -1,4 +1,6 @@
-#[derive(Debug, Default, PartialEq, Eq)]
+use std::ops::RangeInclusive;
+
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
 pub struct Cursor {
 	pub head: usize,
 	pub tail: usize
@@ -37,6 +39,14 @@ impl Cursor {
 		
 		self.head = self.head.clamp(scroll_position, max_row);
 		self.tail = self.tail.clamp(scroll_position, max_row);
+	}
+	
+	pub const fn range(&self) -> RangeInclusive<usize> {
+		if self.head < self.tail {
+			self.head..=self.tail
+		} else {
+			self.tail..=self.head
+		}
 	}
 	
 	pub fn move_to_next_word(&mut self, max: usize) {

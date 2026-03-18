@@ -10,6 +10,7 @@ mod app;
 mod config;
 mod cursor;
 mod action;
+mod edit_action;
 
 const BYTES_PER_LINE: usize = 0x10;
 const BYTES_PER_CHUNK: usize = 4;

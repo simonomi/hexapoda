@@ -361,7 +361,8 @@ mod status_line {
 				Line::from_iter([
 					self.render_mode(),
 					" ".into(),
-					self.render_file_name()
+					self.render_file_name(),
+					self.modified_indicator()
 				])
 			)
 			.bg(Color::ui_grey())
@@ -375,6 +376,14 @@ mod status_line {
 		
 		fn render_file_name(&self) -> Span<'_> {
 			Span::from(&self.file_name)
+		}
+		
+		fn modified_indicator(&self) -> Span<'static> {
+			if self.edit_history.is_empty() {
+				"".into()
+			} else {
+				" [+]".into()
+			}
 		}
 	}
 }

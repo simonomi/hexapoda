@@ -1,21 +1,29 @@
 use std::{env, fs::File, io::Read, path::PathBuf, process::exit};
 use crossterm::{event::{self, Event, KeyEvent}, terminal::window_size};
 use ratatui::style::Color;
-
-use crate::{config::Config, cursor::Cursor};
+use crate::{config::Config, cursor::Cursor, edit_action::EditAction};
 
 mod widget;
 
 pub struct App {
 	pub config: Config,
 	pub file_name: String,
+	
 	pub contents: Vec<u8>,
+	
 	pub window_rows: usize,
+	
 	pub scroll_position: usize,
 	pub cursor: Cursor,
+	
 	pub should_quit: bool,
+	
 	pub mode: Mode,
 	pub partial_action: Option<PartialAction>,
+	
+	pub edit_history: Vec<EditAction>,
+	// some index to keep track of where we are? edit_prophecy?
+	
 	pub logs: Vec<String>,
 }
 
@@ -77,14 +85,22 @@ impl App {
 		Self {
 			config: Config::default(),
 			file_name: file_path.file_name().unwrap().to_str().unwrap().to_owned(),
+			
 			contents,
+			
 			// -1 because of the status line
 			window_rows: window_size().unwrap().rows as usize - 1,
+			
 			scroll_position: 0,
 			cursor: Cursor::default(),
+			
 			should_quit: false,
+			
 			mode: Mode::Normal,
 			partial_action: None,
+			
+			edit_history: Vec::new(),
+			
 			logs: Vec::new(),
 		}
 	}

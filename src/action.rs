@@ -1,6 +1,6 @@
 use std::{cmp::min, mem::swap};
 
-use crate::{BYTES_PER_LINE, app::{App, Mode, PartialAction}};
+use crate::{BYTES_PER_LINE, app::{App, Mode, PartialAction}, edit_action::EditAction};
 
 #[derive(Clone, Copy)]
 pub enum Action {
@@ -40,6 +40,8 @@ pub enum Action {
 	
 	ExtendLineBelow,
 	ExtendLineAbove,
+	
+	Delete,
 }
 
 impl App {
@@ -81,6 +83,8 @@ impl App {
 			
 			Action::ExtendLineBelow => self.extend_line_below(),
 			Action::ExtendLineAbove => self.extend_line_above(),
+			
+			Action::Delete => self.delete(),
 		}
 	}
 	
@@ -272,6 +276,15 @@ impl App {
 			self.cursor.head -= self.cursor.head % BYTES_PER_LINE;
 			self.cursor.tail += BYTES_PER_LINE - 1 - (self.cursor.tail % BYTES_PER_LINE);
 		}
+	}
+	
+	fn delete(&mut self) {
+		self.execute_and_add(
+			EditAction::Delete {
+				cursor: self.cursor,
+				data: self.contents[self.cursor.range()].into()
+			}
+		);
 	}
 }
 

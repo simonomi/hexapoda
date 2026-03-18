@@ -131,6 +131,8 @@ impl Default for Config {
 					
 					("x".try_into().unwrap(), Action::ExtendLineBelow),
 					("X".try_into().unwrap(), Action::ExtendLineAbove),
+					
+					("d".try_into().unwrap(), Action::Delete),
 				].into()),
 				(Some(PartialAction::Goto), [
 					("j".try_into().unwrap(), Action::GotoLineStart),
@@ -171,6 +173,8 @@ impl Default for Config {
 					
 					("x".try_into().unwrap(), Action::ExtendLineBelow),
 					("X".try_into().unwrap(), Action::ExtendLineAbove),
+					
+					("d".try_into().unwrap(), Action::Delete),
 				].into())
 			].into())
 		].into()

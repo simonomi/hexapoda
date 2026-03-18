@@ -251,14 +251,14 @@ impl App {
 			self.cursor.head = min(
 				self.cursor.head + BYTES_PER_LINE,
 				self.contents.len() - 1
-			)
+			);
 		} else {
 			self.cursor.tail -= self.cursor.tail % BYTES_PER_LINE;
 			self.cursor.head += BYTES_PER_LINE - 1 - (self.cursor.head % BYTES_PER_LINE);
 		}
 	}
 	
-	fn extend_line_above(&mut self) {
+	const fn extend_line_above(&mut self) {
 		if self.cursor.head > self.cursor.tail {
 			swap(&mut self.cursor.head, &mut self.cursor.tail);
 		}

@@ -48,7 +48,7 @@ impl App {
 		iter::once(address::render_address(address))
 			.chain(self.render_chunks(address, bytes))
 			.chain(iter::once("  ".into()))
-			.chain(character_panel::render_character_panel(bytes))
+			.chain(self.render_character_panel(address, bytes))
 			.collect()
 	}
 	
@@ -57,7 +57,7 @@ impl App {
 		iter::once(address::render_address(address))
 			.chain(self.render_partial_chunks(address, bytes))
 			.chain(iter::once("  ".into()))
-			.chain(character_panel::render_character_panel(bytes))
+			.chain(self.render_character_panel(address, bytes))
 			.collect()
 	}
 }
@@ -277,25 +277,38 @@ mod hex {
 
 mod character_panel {
 	use std::{borrow::Cow, mem};
-	use ratatui::{style::{Color, Style}, text::Span};
+	use ratatui::{style::{Color, Style, Stylize}, text::Span};
+	use crate::{app::App, cardinality::HasCardinality, cursor::InCursor, custom_greys::CustomGreys, empty_span::empty_span};
 	
-	use crate::{cardinality::HasCardinality, empty_span::empty_span};
-	
-	pub fn render_character_panel(
-		bytes: &[u8]
-	) -> impl Iterator<Item=Span<'static>> {
-		bytes
-			.iter()
-			.copied()
-			.map(render_character)
-	}
-	
-	fn render_character(byte: u8) -> Span<'static> {
-		const SPAN_FOR_BYTE: [Span; u8::CARDINALITY] = create_character_lookup_table();
+	impl App {
+		pub fn render_character_panel(
+			&self,
+			address: usize,
+			bytes: &[u8]
+		) -> impl Iterator<Item=Span<'static>> {
+			bytes
+				.iter()
+				.copied()
+				.zip(address..)
+				.map(|(byte, address)| self.render_character_at(address, byte))
+		}
 		
-		SPAN_FOR_BYTE[byte as usize].clone()
+		fn render_character_at(
+			&self,
+			address: usize,
+			byte: u8
+		) -> Span<'static> {
+			const SPAN_FOR_BYTE: [Span; u8::CARDINALITY] = create_character_lookup_table();
+			
+			let span = SPAN_FOR_BYTE[byte as usize].clone();
+			
+			match self.cursor.contains(address) {
+				Some(InCursor::Head) => span.bg(Color::select_grey()),
+				Some(InCursor::Rest) => span.bg(Color::DarkGray),
+				None => span,
+			}
+		}
 	}
-	
 	const fn create_character_lookup_table() -> [Span<'static>; u8::CARDINALITY] {
 		let mut result = [const { empty_span() }; u8::CARDINALITY];
 		

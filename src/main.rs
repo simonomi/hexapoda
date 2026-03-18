@@ -30,9 +30,9 @@ const CHUNKS_PER_LINE: usize = BYTES_PER_LINE / BYTES_PER_CHUNK;
 //     - mode
 //   - delete
 //   - change
-// - highlight cursor in character panel too (but lighter?)
-//   - edit too
-//     - modifier on existing keys like teehee? or jump to panel?
+// - edit character panel
+//   - modifier on existing keys like teehee? or jump to panel?
+//     - if jump to panel, space?
 // - search
 // - jumplist
 // - f/t

@@ -78,7 +78,7 @@ mod hex {
 	use itertools::{Itertools, repeat_n};
 	use ratatui::{style::{Color, Style, Stylize}, text::Span};
 	
-	use crate::{BYTES_PER_CHUNK, BYTES_PER_LINE, CHUNKS_PER_LINE, app::{App, Mode}, cardinality::HasCardinality, cursor::InCursor, custom_greys::CustomGreys, empty_span::empty_span};
+	use crate::{BYTES_PER_CHUNK, BYTES_PER_LINE, CHUNKS_PER_LINE, app::{App, Mode, PartialAction}, cardinality::HasCardinality, cursor::InCursor, custom_greys::CustomGreys, empty_span::empty_span};
 	
 	impl App {
 		pub fn render_chunks(
@@ -186,6 +186,23 @@ mod hex {
 		}
 		
 		fn render_byte_at(
+			&self,
+			address: usize,
+			byte: u8
+		) -> Span<'static> {
+			if self.partial_action == Some(PartialAction::Replace) &&
+			   self.cursor.contains(address).is_some()
+			{
+				let replaced_byte = self.partial_replace.unwrap_or(0) << 4;
+				
+				self.render_byte_without_replace_preview(address, replaced_byte)
+					.fg(Color::Black)
+			} else {
+				self.render_byte_without_replace_preview(address, byte)
+			}
+		}
+		
+		fn render_byte_without_replace_preview(
 			&self,
 			address: usize,
 			byte: u8

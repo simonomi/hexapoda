@@ -1,6 +1,7 @@
 use std::cmp::min;
 use crate::{app::App, cursor::Cursor};
 
+#[derive(Debug)]
 pub enum EditAction {
 	Delete {
 		cursor: Cursor,

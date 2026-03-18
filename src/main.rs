@@ -69,6 +69,8 @@ fn main() {
 	
 	ratatui::restore();
 	
+	// dbg!(app.edit_history);
+	
 	for log in app.logs {
 		println!("{log}");
 	}

@@ -1,4 +1,4 @@
-use std::{cmp::min, mem::{replace, swap}};
+use std::{cmp::min, fs::File, io::Write, mem::{replace, swap}};
 
 use crate::{BYTES_PER_LINE, app::{App, Mode, PartialAction}, edit_action::EditAction};
 
@@ -10,8 +10,9 @@ pub enum Action {
 	SelectMode,
 	
 	Goto,
-	Zview,
+	View,
 	Replace,
+	Space,
 	
 	MoveByteUp,
 	MoveByteDown,
@@ -54,6 +55,8 @@ pub enum Action {
 	
 	Undo,
 	Redo,
+	
+	Save,
 }
 
 impl App {
@@ -65,8 +68,9 @@ impl App {
 			Action::SelectMode => self.select_mode(),
 			
 			Action::Goto => self.goto(),
-			Action::Zview => self.zview(),
+			Action::View => self.view(),
 			Action::Replace => self.replace(),
+			Action::Space => self.space(),
 			
 			Action::MoveByteUp => self.move_byte_up(),
 			Action::MoveByteDown => self.move_byte_down(),
@@ -109,6 +113,8 @@ impl App {
 			
 			Action::Undo => self.undo(),
 			Action::Redo => self.redo(),
+			
+			Action::Save => self.save(),
 		}
 	}
 	
@@ -128,12 +134,16 @@ impl App {
 		self.partial_action = Some(PartialAction::Goto);
 	}
 	
-	const fn zview(&mut self) {
-		self.partial_action = Some(PartialAction::Zview);
+	const fn view(&mut self) {
+		self.partial_action = Some(PartialAction::View);
 	}
 	
 	const fn replace(&mut self) {
 		self.partial_action = Some(PartialAction::Replace);
+	}
+	
+	const fn space(&mut self) {
+		self.partial_action = Some(PartialAction::Space);
 	}
 	
 	const fn move_byte_up(&mut self) {
@@ -359,7 +369,7 @@ impl App {
 	}
 	
 	fn undo(&mut self) {
-		if self.time_traveling == Some(0) { return }
+		if self.time_traveling == Some(0) || self.edit_history.is_empty() { return }
 		
 		let current_date = self.time_traveling
 			.map_or(self.edit_history.len() - 1, |date| date - 1);
@@ -395,6 +405,15 @@ impl App {
 		self.execute_edit(&edit_action);
 		
 		self.edit_history[previous_date] = edit_action;
+	}
+	
+	fn save(&mut self) {
+		let mut file = File::create(&self.file_path).unwrap();
+		file.write_all(&self.contents).unwrap();
+		
+		self.last_saved_at = Some(
+			self.time_traveling.unwrap_or(self.edit_history.len())
+		);
 	}
 }
 

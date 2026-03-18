@@ -34,6 +34,10 @@ impl App {
 		if let Some(date) = self.time_traveling {
 			self.edit_history.truncate(date);
 			self.time_traveling = None;
+			
+			if self.last_saved_at.is_some_and(|it| it > date) {
+				self.last_saved_at = None;
+			}
 		}
 		
 		self.edit_history.push(edit_action);
@@ -62,7 +66,7 @@ impl App {
 	fn delete_at(&mut self, cursor: Cursor) {
 		self.contents.drain(cursor.range());
 		
-		self.cursor.head = min(cursor.head, cursor.tail);
+		self.cursor.head = min(min(cursor.head, cursor.tail), self.contents.len() - 1);
 		self.cursor.collapse();
 	}
 	

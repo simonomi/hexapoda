@@ -17,7 +17,8 @@ const BYTES_PER_CHUNK: usize = 4;
 const CHUNKS_PER_LINE: usize = BYTES_PER_LINE / BYTES_PER_CHUNK;
 
 // TODO:
-// - undo/redo
+// - multiple buffers (tabs)
+// - search
 // - modifications
 //   - insert/append
 //     - mode
@@ -26,8 +27,6 @@ const CHUNKS_PER_LINE: usize = BYTES_PER_LINE / BYTES_PER_CHUNK;
 //   - replace-and-keep-going
 //     - mode
 //   - change
-// - saving
-// - search
 // - edit character panel
 //   - modifier on existing keys like teehee? or jump to panel?
 //     - if jump to panel, space?
@@ -50,6 +49,9 @@ const CHUNKS_PER_LINE: usize = BYTES_PER_LINE / BYTES_PER_CHUNK;
 // - mark offsets?
 // - utf8?
 // - diffing
+
+// TODO: opening empty file crashes (or deleting entire file)
+// - cursor is NOT guaranteed to be in-bounds..?
 
 // when AsciiChar is stabilized, use it instead of char everywhere
 

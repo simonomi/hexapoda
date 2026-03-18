@@ -401,10 +401,10 @@ mod status_line {
 		}
 		
 		fn modified_indicator(&self) -> Span<'static> {
-			if self.edit_history.is_empty() {
-				"".into()
-			} else {
+			if self.has_unsaved_changes() {
 				" [+]".into()
+			} else {
+				"".into()
 			}
 		}
 	}

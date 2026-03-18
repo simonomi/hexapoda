@@ -8,6 +8,7 @@ mod widget;
 pub struct App {
 	pub config: Config,
 	pub file_name: String,
+	pub file_path: PathBuf,
 	
 	pub contents: Vec<u8>,
 	
@@ -25,6 +26,8 @@ pub struct App {
 	pub edit_history: Vec<EditAction>,
 	// the index *after* the latest edit action
 	pub time_traveling: Option<usize>,
+	// the index *after* the last saved edit action
+	pub last_saved_at: Option<usize>,
 	
 	pub logs: Vec<String>,
 }
@@ -36,7 +39,7 @@ pub enum Mode {
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum PartialAction {
-	Goto, Zview, Replace
+	Goto, View, Replace, Space
 }
 
 impl Mode {
@@ -61,8 +64,9 @@ impl PartialAction {
 	pub const fn label(self) -> &'static str {
 		match self {
 			Self::Goto => "g",
-			Self::Zview => "z",
+			Self::View => "z",
 			Self::Replace => "r",
+			Self::Space => "␠",
 		}
 	}
 }
@@ -87,6 +91,7 @@ impl App {
 		Self {
 			config: Config::default(),
 			file_name: file_path.file_name().unwrap().to_str().unwrap().to_owned(),
+			file_path,
 			
 			contents,
 			
@@ -104,6 +109,7 @@ impl App {
 			
 			edit_history: Vec::new(),
 			time_traveling: None,
+			last_saved_at: Some(0),
 			
 			logs: Vec::new(),
 		}
@@ -159,6 +165,22 @@ impl App {
 			if should_reset_partial {
 				self.partial_action = None;
 			}
+		}
+	}
+	
+	const fn has_unsaved_changes(&self) -> bool {
+		!self.all_changes_saved()
+	}
+	
+	const fn all_changes_saved(&self) -> bool {
+		if let Some(last_saved_at) = self.last_saved_at {
+			if let Some(time_traveling) = self.time_traveling {
+				last_saved_at == time_traveling
+			} else {
+				last_saved_at == self.edit_history.len()
+			}
+		} else {
+			false
 		}
 	}
 }

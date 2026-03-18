@@ -104,8 +104,9 @@ impl Default for Config {
 					("v".try_into().unwrap(), Action::SelectMode),
 					
 					("g".try_into().unwrap(), Action::Goto),
-					("z".try_into().unwrap(), Action::Zview),
+					("z".try_into().unwrap(), Action::View),
 					("r".try_into().unwrap(), Action::Replace),
+					(" ".try_into().unwrap(), Action::Space),
 					
 					("i".try_into().unwrap(), Action::MoveByteUp),
 					("k".try_into().unwrap(), Action::MoveByteDown),
@@ -142,7 +143,10 @@ impl Default for Config {
 					("l".try_into().unwrap(), Action::GotoLineEnd),
 					
 					("g".try_into().unwrap(), Action::GotoFileStart),
-				].into())
+				].into()),
+				(Some(PartialAction::Space), [
+					("w".try_into().unwrap(), Action::Save),
+				].into()),
 			].into()),
 			(Mode::Select, [
 				(None, [
@@ -151,8 +155,9 @@ impl Default for Config {
 					("v".try_into().unwrap(), Action::NormalMode),
 					
 					("g".try_into().unwrap(), Action::Goto),
-					("z".try_into().unwrap(), Action::Zview),
+					("z".try_into().unwrap(), Action::View),
 					("r".try_into().unwrap(), Action::Replace),
+					(" ".try_into().unwrap(), Action::Space),
 					
 					("i".try_into().unwrap(), Action::ExtendByteUp),
 					("k".try_into().unwrap(), Action::ExtendByteDown),
@@ -181,7 +186,10 @@ impl Default for Config {
 					
 					("u".try_into().unwrap(), Action::Undo),
 					("U".try_into().unwrap(), Action::Redo),
-				].into())
+				].into()),
+				(Some(PartialAction::Space), [
+					("w".try_into().unwrap(), Action::Save),
+				].into()),
 			].into())
 		].into()
 	}

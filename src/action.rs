@@ -18,6 +18,11 @@ pub enum Action {
 	MoveByteLeft,
 	MoveByteRight,
 	
+	ExtendByteUp,
+	ExtendByteDown,
+	ExtendByteLeft,
+	ExtendByteRight,
+	
 	GotoLineStart,
 	GotoLineEnd,
 	GotoFileStart,
@@ -35,6 +40,10 @@ pub enum Action {
 	MoveNextWordStart,
 	MoveNextWordEnd,
 	MovePreviousWordStart,
+	
+	ExtendNextWordStart,
+	ExtendNextWordEnd,
+	ExtendPreviousWordStart,
 	
 	CollapseSelection,
 	
@@ -61,6 +70,11 @@ impl App {
 			Action::MoveByteLeft => self.move_byte_left(),
 			Action::MoveByteRight => self.move_byte_right(),
 			
+			Action::ExtendByteUp => self.extend_byte_up(),
+			Action::ExtendByteDown => self.extend_byte_down(),
+			Action::ExtendByteLeft => self.extend_byte_left(),
+			Action::ExtendByteRight => self.extend_byte_right(),
+			
 			Action::GotoLineStart => self.goto_line_start(),
 			Action::GotoLineEnd => self.goto_line_end(),
 			Action::GotoFileStart => self.goto_file_start(),
@@ -78,6 +92,10 @@ impl App {
 			Action::MoveNextWordStart => self.move_next_word_start(),
 			Action::MoveNextWordEnd => self.move_next_word_end(),
 			Action::MovePreviousWordStart => self.move_previous_word_start(),
+			
+			Action::ExtendNextWordStart => self.extend_next_word_start(),
+			Action::ExtendNextWordEnd => self.extend_next_word_end(),
+			Action::ExtendPreviousWordStart => self.extend_previous_word_start(),
 			
 			Action::CollapseSelection => self.collapse_selection(),
 			
@@ -144,6 +162,34 @@ impl App {
 			self.cursor.head += 1;
 			self.cursor.collapse();
 			
+			self.clamp_screen_to_cursor();
+		}
+	}
+	
+	const fn extend_byte_up(&mut self) {
+		if self.cursor.head >= BYTES_PER_LINE {
+			self.cursor.head -= BYTES_PER_LINE;
+			self.clamp_screen_to_cursor();
+		}
+	}
+	
+	const fn extend_byte_down(&mut self) {
+		if self.contents.len() - 1 - self.cursor.head >= BYTES_PER_LINE {
+			self.cursor.head += BYTES_PER_LINE;
+			self.clamp_screen_to_cursor();
+		}
+	}
+	
+	const fn extend_byte_left(&mut self) {
+		if self.cursor.head >= 1 {
+			self.cursor.head -= 1;
+			self.clamp_screen_to_cursor();
+		}
+	}
+	
+	const fn extend_byte_right(&mut self) {
+		if self.contents.len() - 1 - self.cursor.head >= 1 {
+			self.cursor.head += 1;
 			self.clamp_screen_to_cursor();
 		}
 	}
@@ -240,6 +286,21 @@ impl App {
 		self.clamp_screen_to_cursor();
 	}
 	
+	fn extend_next_word_start(&mut self) {
+		self.cursor.extend_to_next_word(self.contents.len() - 1);
+		self.clamp_screen_to_cursor();
+	}
+	
+	fn extend_next_word_end(&mut self) {
+		self.cursor.extend_to_next_end(self.contents.len() - 1);
+		self.clamp_screen_to_cursor();
+	}
+	
+	const fn extend_previous_word_start(&mut self) {
+		self.cursor.extend_to_previous_beginning();
+		self.clamp_screen_to_cursor();
+	}
+	
 	const fn collapse_selection(&mut self) {
 		self.cursor.collapse();
 	}
@@ -285,6 +346,10 @@ impl App {
 				data: self.contents[self.cursor.range()].into()
 			}
 		);
+		
+		if self.mode == Mode::Select {
+			self.mode = Mode::Normal;
+		}
 	}
 }
 

@@ -78,7 +78,7 @@ mod hex {
 	use itertools::{Itertools, repeat_n};
 	use ratatui::{style::{Color, Style, Stylize}, text::Span};
 	
-	use crate::{BYTES_PER_CHUNK, BYTES_PER_LINE, CHUNKS_PER_LINE, app::App, cardinality::HasCardinality, cursor::InCursor, empty_span::empty_span, custom_greys::CustomGreys};
+	use crate::{BYTES_PER_CHUNK, BYTES_PER_LINE, CHUNKS_PER_LINE, app::{App, Mode}, cardinality::HasCardinality, cursor::InCursor, custom_greys::CustomGreys, empty_span::empty_span};
 	
 	impl App {
 		pub fn render_chunks(
@@ -194,8 +194,13 @@ mod hex {
 			
 			let span = SPAN_FOR_BYTE[byte as usize].clone();
 			
+			let head_color = match self.mode {
+				Mode::Select => Color::Yellow,
+				_ => Color::Gray
+			};
+			
 			match self.cursor.contains(address) {
-				Some(InCursor::Head) => span.bg(Color::Gray),
+				Some(InCursor::Head) => span.bg(head_color),
 				Some(InCursor::Rest) => span.bg(Color::select_grey()),
 				None => span,
 			}

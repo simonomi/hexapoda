@@ -151,10 +151,10 @@ impl Default for Config {
 					("z".try_into().unwrap(), Action::ZPartial),
 					("r".try_into().unwrap(), Action::RPartial),
 					
-					// ("i".try_into().unwrap(), Action::ExtendByteUp),
-					// ("k".try_into().unwrap(), Action::ExtendByteDown),
-					// ("j".try_into().unwrap(), Action::ExtendByteLeft),
-					// ("l".try_into().unwrap(), Action::ExtendByteRight),
+					("i".try_into().unwrap(), Action::ExtendByteUp),
+					("k".try_into().unwrap(), Action::ExtendByteDown),
+					("j".try_into().unwrap(), Action::ExtendByteLeft),
+					("l".try_into().unwrap(), Action::ExtendByteRight),
 					
 					("C-e".try_into().unwrap(), Action::ScrollDown),
 					("C-y".try_into().unwrap(), Action::ScrollUp),
@@ -165,9 +165,9 @@ impl Default for Config {
 					("C-f".try_into().unwrap(), Action::PageDown),
 					("C-b".try_into().unwrap(), Action::PageUp),
 					
-					// ("w".try_into().unwrap(), Action::ExtendNextWordStart),
-					// ("e".try_into().unwrap(), Action::ExtendNextWordEnd),
-					// ("b".try_into().unwrap(), Action::ExtendPreviousWordStart),
+					("w".try_into().unwrap(), Action::ExtendNextWordStart),
+					("e".try_into().unwrap(), Action::ExtendNextWordEnd),
+					("b".try_into().unwrap(), Action::ExtendPreviousWordStart),
 					
 					(";".try_into().unwrap(), Action::CollapseSelection),
 					

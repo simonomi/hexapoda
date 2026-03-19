@@ -99,8 +99,8 @@ impl Default for Config {
 		[
 			(Mode::Normal, [
 				(None, [
-					("q".try_into().unwrap(), Action::CloseIfSaved),
-					("Q".try_into().unwrap(), Action::Close),
+					("q".try_into().unwrap(), Action::QuitIfSaved),
+					("Q".try_into().unwrap(), Action::Quit),
 					
 					("v".try_into().unwrap(), Action::SelectMode),
 					
@@ -151,8 +151,8 @@ impl Default for Config {
 			].into()),
 			(Mode::Select, [
 				(None, [
-					("q".try_into().unwrap(), Action::CloseIfSaved),
-					("Q".try_into().unwrap(), Action::Close),
+					("q".try_into().unwrap(), Action::QuitIfSaved),
+					("Q".try_into().unwrap(), Action::Quit),
 					
 					("v".try_into().unwrap(), Action::NormalMode),
 					

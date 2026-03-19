@@ -1,6 +1,7 @@
-use std::{cmp::min, env, process::exit};
+use std::{env, process::exit};
 use crossterm::{event::{self, Event, KeyEvent}, terminal::window_size};
-use crate::{BYTES_PER_LINE, buffer::Buffer, config::Config};
+use ratatui::{style::Stylize, text::Span};
+use crate::{BYTES_PER_LINE, action::AppAction, buffer::Buffer, config::Config};
 
 mod widget;
 
@@ -70,24 +71,35 @@ impl App {
 	}
 	
 	fn handle_key(&mut self, key_event: KeyEvent) {
-		self.buffers[self.current_buffer_index]
-			.handle_key(key_event, &self.config, self.window_size);
+		let maybe_app_action = self.buffers[self.current_buffer_index].handle_key(
+			key_event,
+			&self.config,
+			self.window_size
+		);
 		
-		if self.current_buffer().should_close {
-			self.buffers.remove(self.current_buffer_index);
-			
-			if self.buffers.is_empty() {
-				self.should_quit = true;
-			} else {
-				self.current_buffer_index = min(
-					self.current_buffer_index,
-					self.buffers.len() - 1
-				);
+		if let Some(app_action) = maybe_app_action {
+			match app_action {
+				AppAction::QuitIfSaved => self.quit_if_saved(),
+				AppAction::Quit => self.quit(),
 			}
 		}
 	}
 	
-	fn current_buffer(&self) -> &Buffer {
+	fn quit_if_saved(&mut self) {
+		if self.buffers.iter().all(Buffer::all_changes_saved) {
+			self.quit();
+		} else {
+			self.buffers[self.current_buffer_index].alert_message = Span::from(
+				"there are unsaved changes, use Q to override"
+			).red();
+		}
+	}
+	
+	const fn quit(&mut self) {
+		self.should_quit = true;
+	}
+	
+	pub fn current_buffer(&self) -> &Buffer {
 		&self.buffers[self.current_buffer_index]
 	}
 }

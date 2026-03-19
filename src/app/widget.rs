@@ -20,18 +20,18 @@ impl App {
 		self.buffers
 			.iter()
 			.enumerate()
-			.map(|(index, buffer)| self.tab_for(buffer, index == self.current_buffer_index))
+			.map(|(index, buffer)| tab_for(buffer, index == self.current_buffer_index))
 			.collect()
 	}
+}
+
+fn tab_for(buffer: &Buffer, is_active: bool) -> Span<'static> {
+	let background = if is_active {
+		Color::select_grey()
+	} else {
+		Color::ui_grey()
+	};
 	
-	fn tab_for(&self, buffer: &Buffer, is_active: bool) -> Span<'static> {
-		let background = if is_active {
-			Color::select_grey()
-		} else {
-			Color::ui_grey()
-		};
-		
-		Span::from(format!(" {} ", buffer.file_name))
-			.bg(background)
-	}
+	Span::from(format!(" {} ", buffer.file_name))
+		.bg(background)
 }

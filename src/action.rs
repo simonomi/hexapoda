@@ -1,11 +1,10 @@
 use std::{cmp::min, fs::File, io::Write, mem::{replace, swap}};
-use ratatui::{style::Stylize, text::Span};
 use crate::{BYTES_PER_LINE, app::WindowSize, buffer::{Buffer, Mode, PartialAction}, edit_action::EditAction};
 
 #[derive(Clone, Copy)]
 pub enum Action {
-	CloseIfSaved,
-	Close,
+	QuitIfSaved,
+	Quit,
 	
 	NormalMode,
 	SelectMode,
@@ -60,11 +59,17 @@ pub enum Action {
 	Save,
 }
 
+// actions that act on the app as a whole, not just one buffer
+pub enum AppAction {
+	QuitIfSaved,
+	Quit,
+}
+
 impl Buffer {
-	pub fn execute(&mut self, action: Action, window_size: WindowSize) {
+	pub fn execute(&mut self, action: Action, window_size: WindowSize) -> Option<AppAction> {
 		match action {
-			Action::CloseIfSaved => self.close_if_saved(),
-			Action::Close => self.close(),
+			Action::QuitIfSaved => return Some(AppAction::QuitIfSaved),
+			Action::Quit => return Some(AppAction::Quit),
 			
 			Action::NormalMode => self.normal_mode(),
 			Action::SelectMode => self.select_mode(),
@@ -118,20 +123,8 @@ impl Buffer {
 			
 			Action::Save => self.save(),
 		}
-	}
-	
-	fn close_if_saved(&mut self) {
-		if self.all_changes_saved() {
-			self.close();
-		} else {
-			self.alert_message = Span::from(
-				"there are unsaved changes, use Q to override"
-			).red();
-		}
-	}
-	
-	const fn close(&mut self) {
-		self.should_close = true;
+		
+		None
 	}
 	
 	const fn normal_mode(&mut self) {

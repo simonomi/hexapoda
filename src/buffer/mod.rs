@@ -1,7 +1,7 @@
 use std::{fs::File, io::Read, path::PathBuf};
 use crossterm::event::KeyEvent;
 use ratatui::{style::Color, text::Span};
-use crate::{app::WindowSize, config::Config, cursor::Cursor, edit_action::EditAction};
+use crate::{action::AppAction, app::WindowSize, config::Config, cursor::Cursor, edit_action::EditAction};
 
 mod widget;
 
@@ -25,8 +25,6 @@ pub struct Buffer {
 	pub time_traveling: Option<usize>,
 	// the index *after* the last saved edit action
 	pub last_saved_at: Option<usize>,
-	
-	pub should_close: bool,
 }
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
@@ -92,8 +90,6 @@ impl Buffer {
 			edit_history: Vec::new(),
 			time_traveling: None,
 			last_saved_at: Some(0),
-			
-			should_close: false,
 		}
 	}
 	
@@ -102,8 +98,10 @@ impl Buffer {
 		event: KeyEvent,
 		config: &Config,
 		window_size: WindowSize
-	) {
+	) -> Option<AppAction> {
 		self.alert_message = "".into();
+		
+		let mut app_action = None;
 		
 		if self.partial_action == Some(PartialAction::Replace) {
 			if let Some(hex_character) = event.code.as_char() &&
@@ -132,13 +130,15 @@ impl Buffer {
 			   let Some(keybinds) = mode_config.0.get(&self.partial_action) &&
 			   let Some(action) = keybinds.0.get(&event.into())
 			{
-				self.execute(*action, window_size);
+				app_action = self.execute(*action, window_size);
 			}
 			
 			if should_reset_partial {
 				self.partial_action = None;
 			}
 		}
+		
+		app_action
 	}
 	
 	pub const fn has_unsaved_changes(&self) -> bool {

@@ -53,8 +53,7 @@ impl Widget for &Buffer {
 }
 
 impl Buffer {
-	#[allow(mismatched_lifetime_syntaxes)]
-	fn render_line(&self, address: usize, bytes: &[u8; BYTES_PER_LINE]) -> Line {
+	fn render_line(&self, address: usize, bytes: &[u8; BYTES_PER_LINE]) -> Line<'static> {
 		iter::once(address::render_address(address))
 			.chain(self.render_chunks(address, bytes))
 			.chain(iter::once("  ".into()))
@@ -62,8 +61,7 @@ impl Buffer {
 			.collect()
 	}
 	
-	#[allow(mismatched_lifetime_syntaxes)]
-	fn render_partial_line(&self, address: usize, bytes: &[u8]) -> Line {
+	fn render_partial_line(&self, address: usize, bytes: &[u8]) -> Line<'static> {
 		iter::once(address::render_address(address))
 			.chain(self.render_partial_chunks(address, bytes))
 			.chain(iter::once("  ".into()))

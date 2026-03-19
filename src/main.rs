@@ -57,6 +57,7 @@ const CHUNKS_PER_LINE: usize = BYTES_PER_LINE / BYTES_PER_CHUNK;
 fn main() {
 	let mut app = App::new();
 	let mut terminal = ratatui::init();
+	crossterm::terminal::enable_raw_mode().unwrap();
 	
 	while !app.should_quit {
 		terminal.draw(|frame| {
@@ -66,6 +67,7 @@ fn main() {
 		app.handle_events();
 	}
 	
+	crossterm::terminal::disable_raw_mode().unwrap();
 	ratatui::restore();
 	
 	// dbg!(app.edit_history);

@@ -138,6 +138,9 @@ impl Default for Config {
 					
 					("u".try_into().unwrap(), Action::Undo),
 					("U".try_into().unwrap(), Action::Redo),
+					
+					("C-j".try_into().unwrap(), Action::PreviousBuffer),
+					("C-l".try_into().unwrap(), Action::NextBuffer),
 				].into()),
 				(Some(PartialAction::Goto), [
 					("j".try_into().unwrap(), Action::GotoLineStart),

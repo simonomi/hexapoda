@@ -1,5 +1,5 @@
 use std::{env, process::exit};
-use crossterm::{event::{self, Event, KeyEvent}, terminal::window_size};
+use crossterm::{event::{self, Event, KeyCode, KeyEvent, KeyModifiers}, terminal::window_size};
 use ratatui::{style::Stylize, text::Span};
 use crate::{BYTES_PER_LINE, action::AppAction, buffer::Buffer, config::Config};
 
@@ -71,6 +71,14 @@ impl App {
 	}
 	
 	fn handle_key(&mut self, key_event: KeyEvent) {
+		if key_event.modifiers == KeyModifiers::CONTROL &&
+		   key_event.code == KeyCode::Char('c')
+		{
+			crossterm::terminal::disable_raw_mode().unwrap();
+			ratatui::restore();
+			exit(130);
+		}
+		
 		let maybe_app_action = self.buffers[self.current_buffer_index].handle_key(
 			key_event,
 			&self.config,
@@ -81,6 +89,9 @@ impl App {
 			match app_action {
 				AppAction::QuitIfSaved => self.quit_if_saved(),
 				AppAction::Quit => self.quit(),
+				
+				AppAction::PreviousBuffer => self.previous_buffer(),
+				AppAction::NextBuffer => self.next_buffer(),
 			}
 		}
 	}
@@ -97,6 +108,22 @@ impl App {
 	
 	const fn quit(&mut self) {
 		self.should_quit = true;
+	}
+	
+	const fn previous_buffer(&mut self) {
+		if self.current_buffer_index == 0 {
+			self.current_buffer_index = self.buffers.len() - 1;
+		} else {
+			self.current_buffer_index -= 1;
+		}
+	}
+	
+	const fn next_buffer(&mut self) {
+		if self.current_buffer_index == self.buffers.len() - 1 {
+			self.current_buffer_index = 0;
+		} else {
+			self.current_buffer_index += 1;
+		}
 	}
 	
 	pub fn current_buffer(&self) -> &Buffer {

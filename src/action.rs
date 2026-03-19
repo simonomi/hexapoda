@@ -57,12 +57,18 @@ pub enum Action {
 	Redo,
 	
 	Save,
+	
+	PreviousBuffer,
+	NextBuffer,
 }
 
 // actions that act on the app as a whole, not just one buffer
 pub enum AppAction {
 	QuitIfSaved,
 	Quit,
+	
+	PreviousBuffer,
+	NextBuffer,
 }
 
 impl Buffer {
@@ -122,6 +128,9 @@ impl Buffer {
 			Action::Redo => self.redo(),
 			
 			Action::Save => self.save(),
+			
+			Action::PreviousBuffer => return Some(AppAction::PreviousBuffer),
+			Action::NextBuffer => return Some(AppAction::NextBuffer),
 		}
 		
 		None

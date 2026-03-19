@@ -1,5 +1,5 @@
 use std::{cmp::min, fs::File, io::Write, mem::{replace, swap}};
-
+use ratatui::{style::Stylize, text::Span};
 use crate::{BYTES_PER_LINE, app::{App, Mode, PartialAction}, edit_action::EditAction};
 
 #[derive(Clone, Copy)]
@@ -120,11 +120,13 @@ impl App {
 		}
 	}
 	
-	const fn quit_if_saved(&mut self) {
+	fn quit_if_saved(&mut self) {
 		if self.all_changes_saved() {
 			self.quit();
 		} else {
-			// TODO: show alert of some kind
+			self.alert_message = Span::from(
+				"there are unsaved changes, use Q to override"
+			).red();
 		}
 	}
 	
@@ -227,8 +229,11 @@ impl App {
 		self.cursor.collapse();
 	}
 	
-	const fn goto_line_end(&mut self) {
-		self.cursor.head += BYTES_PER_LINE - 1 - (self.cursor.head % BYTES_PER_LINE);
+	fn goto_line_end(&mut self) {
+		self.cursor.head = min(
+			self.cursor.head + BYTES_PER_LINE - 1 - (self.cursor.head % BYTES_PER_LINE),
+			self.max_contents_index()
+		);
 		self.cursor.collapse();
 	}
 	

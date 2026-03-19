@@ -200,7 +200,7 @@ mod hex {
 				let replaced_byte = self.partial_replace.unwrap_or(0) << 4;
 				
 				self.render_byte_without_replace_preview(address, replaced_byte)
-					.fg(Color::Black)
+					.black()
 			} else {
 				self.render_byte_without_replace_preview(address, byte)
 			}
@@ -330,7 +330,7 @@ mod character_panel {
 			
 			match self.cursor.contains(address) {
 				Some(InCursor::Head) => span.bg(Color::select_grey()),
-				Some(InCursor::Rest) => span.bg(Color::DarkGray),
+				Some(InCursor::Rest) => span.on_dark_gray(),
 				None => span,
 			}
 		}
@@ -388,7 +388,9 @@ mod status_line {
 					self.render_mode(),
 					" ".into(),
 					self.render_file_name(),
-					self.modified_indicator()
+					self.modified_indicator(),
+					"  ".into(),
+					self.alert_message.clone()
 				])
 			)
 			.bg(Color::ui_grey())
@@ -396,7 +398,7 @@ mod status_line {
 		
 		fn render_mode(&self) -> Span<'static> {
 			Span::from(self.mode.label())
-				.fg(Color::Black)
+				.black()
 				.bg(self.mode.color())
 		}
 		

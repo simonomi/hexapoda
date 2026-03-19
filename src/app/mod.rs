@@ -1,6 +1,6 @@
 use std::{env, fs::File, io::Read, path::PathBuf, process::exit};
 use crossterm::{event::{self, Event, KeyEvent}, terminal::window_size};
-use ratatui::style::Color;
+use ratatui::{style::Color, text::Span};
 use crate::{config::Config, cursor::Cursor, edit_action::EditAction};
 
 mod widget;
@@ -28,6 +28,8 @@ pub struct App {
 	pub time_traveling: Option<usize>,
 	// the index *after* the last saved edit action
 	pub last_saved_at: Option<usize>,
+	
+	pub alert_message: Span<'static>,
 	
 	pub logs: Vec<String>,
 }
@@ -111,6 +113,8 @@ impl App {
 			time_traveling: None,
 			last_saved_at: Some(0),
 			
+			alert_message: "".into(),
+			
 			logs: Vec::new(),
 		}
 	}
@@ -132,6 +136,8 @@ impl App {
 	}
 	
 	fn handle_key(&mut self, event: KeyEvent) {
+		self.alert_message = "".into();
+		
 		if self.partial_action == Some(PartialAction::Replace) {
 			if let Some(hex_character) = event.code.as_char() &&
 			   let Some(nybble) = nybble_from_hex(hex_character)

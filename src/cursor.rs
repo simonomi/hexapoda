@@ -50,7 +50,7 @@ impl Cursor {
 	}
 	
 	pub fn move_to_next_word(&mut self, max: usize) {
-		if self.head == max { return }
+		if self.head == max { return; }
 		
 		if self.head.is_multiple_of(4) { // at the beginning of a word
 			self.head = (self.head + 4).min(max);
@@ -61,7 +61,7 @@ impl Cursor {
 	}
 	
 	pub fn move_to_next_end(&mut self, max: usize) {
-		if self.head == max { return }
+		if self.head == max { return; }
 		
 		self.collapse();
 		if self.head % 4 == 3 { // at the end of a word
@@ -73,7 +73,7 @@ impl Cursor {
 	}
 	
 	pub const fn move_to_previous_beginning(&mut self) {
-		if self.head == 0 { return }
+		if self.head == 0 { return; }
 		
 		self.collapse();
 		if self.head.is_multiple_of(4) { // at the beginning of a word
@@ -85,7 +85,7 @@ impl Cursor {
 	}
 	
 	pub fn extend_to_next_word(&mut self, max: usize) {
-		if self.head == max { return }
+		if self.head == max { return; }
 		
 		if self.head.is_multiple_of(4) { // at the beginning of a word
 			self.head = (self.head + 4).min(max);
@@ -95,7 +95,7 @@ impl Cursor {
 	}
 	
 	pub fn extend_to_next_end(&mut self, max: usize) {
-		if self.head == max { return }
+		if self.head == max { return; }
 		
 		if self.head % 4 == 3 { // at the end of a word
 			self.head = (self.head + 4).min(max);
@@ -105,7 +105,7 @@ impl Cursor {
 	}
 	
 	pub const fn extend_to_previous_beginning(&mut self) {
-		if self.head == 0 { return }
+		if self.head == 0 { return; }
 		
 		if self.head.is_multiple_of(4) { // at the beginning of a word
 			self.head -= 4;

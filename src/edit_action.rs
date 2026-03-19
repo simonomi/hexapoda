@@ -66,7 +66,7 @@ impl App {
 	fn delete_at(&mut self, cursor: Cursor) {
 		self.contents.drain(cursor.range());
 		
-		self.cursor.head = min(min(cursor.head, cursor.tail), self.contents.len() - 1);
+		self.cursor.head = min(min(cursor.head, cursor.tail), self.max_contents_index());
 		self.cursor.collapse();
 	}
 	

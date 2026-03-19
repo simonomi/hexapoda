@@ -33,6 +33,10 @@ impl Widget for &App {
 		let hex_area = Rect::new(area.x, area.y, area.width, area.height - 1);
 		hex_text.render(hex_area, buf);
 		
+		if self.contents.is_empty() {
+			Line::from("empty file").render(area, buf);
+		}
+		
 		let status_line_area = Rect::new(area.x, area.bottom() - 1, area.width, 1);
 		self.render_status_line().render(status_line_area, buf);
 		
@@ -416,14 +420,18 @@ mod extra_statuses {
 	
 	impl App {
 		pub fn render_extra_statuses(&self) -> Line<'_> {
-			#[allow(clippy::cast_precision_loss)]
-			let percentage = self.cursor.head as f64 / (self.contents.len() - 1) as f64 * 100.0;
-			
 			let partial_action = self.partial_action
 				.as_ref()
 				.map_or("", |partial_action| partial_action.label());
 			
-			format!("{partial_action} {percentage:.0}% ").into()
+			if self.contents.is_empty() {
+				format!("{partial_action} ").into()
+			} else {
+				#[allow(clippy::cast_precision_loss)]
+				let percentage = self.cursor.head as f64 / self.max_contents_index() as f64 * 100.0;
+				
+				format!("{partial_action} {percentage:.0}% ").into()
+			}
 		}
 	}
 }

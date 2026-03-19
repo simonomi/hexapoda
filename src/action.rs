@@ -139,7 +139,9 @@ impl App {
 	}
 	
 	const fn replace(&mut self) {
-		self.partial_action = Some(PartialAction::Replace);
+		if !self.contents.is_empty() {
+			self.partial_action = Some(PartialAction::Replace);
+		}
 	}
 	
 	const fn space(&mut self) {
@@ -156,7 +158,7 @@ impl App {
 	}
 	
 	const fn move_byte_down(&mut self) {
-		if self.contents.len() - 1 - self.cursor.head >= BYTES_PER_LINE {
+		if self.max_contents_index() - self.cursor.head >= BYTES_PER_LINE {
 			self.cursor.head += BYTES_PER_LINE;
 			self.cursor.collapse();
 			
@@ -174,7 +176,7 @@ impl App {
 	}
 	
 	const fn move_byte_right(&mut self) {
-		if self.contents.len() - 1 - self.cursor.head >= 1 {
+		if self.max_contents_index() - self.cursor.head >= 1 {
 			self.cursor.head += 1;
 			self.cursor.collapse();
 			
@@ -190,7 +192,7 @@ impl App {
 	}
 	
 	const fn extend_byte_down(&mut self) {
-		if self.contents.len() - 1 - self.cursor.head >= BYTES_PER_LINE {
+		if self.max_contents_index() - self.cursor.head >= BYTES_PER_LINE {
 			self.cursor.head += BYTES_PER_LINE;
 			self.clamp_screen_to_cursor();
 		}
@@ -204,7 +206,7 @@ impl App {
 	}
 	
 	const fn extend_byte_right(&mut self) {
-		if self.contents.len() - 1 - self.cursor.head >= 1 {
+		if self.max_contents_index() - self.cursor.head >= 1 {
 			self.cursor.head += 1;
 			self.clamp_screen_to_cursor();
 		}
@@ -235,6 +237,8 @@ impl App {
 	}
 	
 	fn scroll_down(&mut self) {
+		if self.contents.len() <= 5 * BYTES_PER_LINE { return; }
+		
 		self.scroll_position = min(
 			self.scroll_position + BYTES_PER_LINE,
 			self.contents.len() - (5 * BYTES_PER_LINE)
@@ -248,6 +252,8 @@ impl App {
 	}
 	
 	fn page_cursor_half_down(&mut self) {
+		if self.contents.len() <= 5 * BYTES_PER_LINE { return; }
+		
 		let head_offset = self.cursor.head - self.scroll_position;
 		let tail_offset = self.cursor.tail - self.scroll_position;
 		
@@ -256,8 +262,8 @@ impl App {
 			self.contents.len() - (5 * BYTES_PER_LINE)
 		);
 		
-		self.cursor.head = (self.scroll_position + head_offset).min(self.contents.len() - 1);
-		self.cursor.tail = (self.scroll_position + tail_offset).min(self.contents.len() - 1);
+		self.cursor.head = (self.scroll_position + head_offset).min(self.max_contents_index());
+		self.cursor.tail = (self.scroll_position + tail_offset).min(self.max_contents_index());
 	}
 	
 	fn page_cursor_half_up(&mut self) {
@@ -268,11 +274,13 @@ impl App {
 			(self.screen_size() / 2).next_multiple_of(BYTES_PER_LINE)
 		);
 		
-		self.cursor.head = (self.scroll_position + head_offset).min(self.contents.len() - 1);
-		self.cursor.tail = (self.scroll_position + tail_offset).min(self.contents.len() - 1);
+		self.cursor.head = (self.scroll_position + head_offset).min(self.max_contents_index());
+		self.cursor.tail = (self.scroll_position + tail_offset).min(self.max_contents_index());
 	}
 	
 	fn page_down(&mut self) {
+		if self.contents.len() <= 5 * BYTES_PER_LINE { return; }
+		
 		self.scroll_position = min(
 			self.scroll_position + self.screen_size(),
 			self.contents.len() - (5 * BYTES_PER_LINE)
@@ -288,12 +296,12 @@ impl App {
 	}
 	
 	fn move_next_word_start(&mut self) {
-		self.cursor.move_to_next_word(self.contents.len() - 1);
+		self.cursor.move_to_next_word(self.max_contents_index());
 		self.clamp_screen_to_cursor();
 	}
 	
 	fn move_next_word_end(&mut self) {
-		self.cursor.move_to_next_end(self.contents.len() - 1);
+		self.cursor.move_to_next_end(self.max_contents_index());
 		self.clamp_screen_to_cursor();
 	}
 	
@@ -303,12 +311,12 @@ impl App {
 	}
 	
 	fn extend_next_word_start(&mut self) {
-		self.cursor.extend_to_next_word(self.contents.len() - 1);
+		self.cursor.extend_to_next_word(self.max_contents_index());
 		self.clamp_screen_to_cursor();
 	}
 	
 	fn extend_next_word_end(&mut self) {
-		self.cursor.extend_to_next_end(self.contents.len() - 1);
+		self.cursor.extend_to_next_end(self.max_contents_index());
 		self.clamp_screen_to_cursor();
 	}
 	
@@ -331,7 +339,7 @@ impl App {
 		{
 			self.cursor.head = min(
 				self.cursor.head + BYTES_PER_LINE,
-				self.contents.len() - 1
+				self.max_contents_index()
 			);
 		} else {
 			self.cursor.tail -= self.cursor.tail % BYTES_PER_LINE;
@@ -346,7 +354,7 @@ impl App {
 		
 		if self.cursor.head.is_multiple_of(BYTES_PER_LINE) &&
 		   (self.cursor.tail % BYTES_PER_LINE == BYTES_PER_LINE - 1 ||
-		    self.cursor.tail == self.contents.len() - 1)
+		    self.cursor.tail == self.max_contents_index())
 		{
 			self.cursor.head = self.cursor.head.saturating_sub(BYTES_PER_LINE);
 		} else {
@@ -356,12 +364,14 @@ impl App {
 	}
 	
 	fn delete(&mut self) {
-		self.execute_and_add(
-			EditAction::Delete {
-				cursor: self.cursor,
-				old_data: self.contents[self.cursor.range()].into()
-			}
-		);
+		if !self.contents.is_empty() {
+			self.execute_and_add(
+				EditAction::Delete {
+					cursor: self.cursor,
+					old_data: self.contents[self.cursor.range()].into()
+				}
+			);
+		}
 		
 		if self.mode == Mode::Select {
 			self.mode = Mode::Normal;
@@ -369,7 +379,7 @@ impl App {
 	}
 	
 	fn undo(&mut self) {
-		if self.time_traveling == Some(0) || self.edit_history.is_empty() { return }
+		if self.time_traveling == Some(0) || self.edit_history.is_empty() { return; }
 		
 		let current_date = self.time_traveling
 			.map_or(self.edit_history.len() - 1, |date| date - 1);
@@ -387,7 +397,7 @@ impl App {
 	}
 	
 	fn redo(&mut self) {
-		let Some(previous_date) = self.time_traveling else { return };
+		let Some(previous_date) = self.time_traveling else { return; };
 		
 		let current_date = previous_date + 1;
 		

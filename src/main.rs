@@ -50,8 +50,7 @@ const CHUNKS_PER_LINE: usize = BYTES_PER_LINE / BYTES_PER_CHUNK;
 // - utf8?
 // - diffing
 
-// TODO: opening empty file crashes (or deleting entire file)
-// - cursor is NOT guaranteed to be in-bounds..?
+// TODO: quit should confirm if unsaved changes
 
 // when AsciiChar is stabilized, use it instead of char everywhere
 

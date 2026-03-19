@@ -183,10 +183,15 @@ impl App {
 			false
 		}
 	}
+	
+	// returns 0 if empty
+	pub const fn max_contents_index(&self) -> usize {
+		self.contents.len().saturating_sub(1)
+	}
 }
 
 fn nybble_from_hex(hex: char) -> Option<u8> {
-	if !hex.is_ascii() { return None }
+	if !hex.is_ascii() { return None; }
 	
 	match hex {
 		'0'..='9' => Some(u8::try_from(hex).unwrap() - u8::try_from('0').unwrap()),

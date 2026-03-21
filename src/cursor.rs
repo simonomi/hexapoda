@@ -30,6 +30,10 @@ impl Cursor {
 		self.lower_bound()..=self.upper_bound()
 	}
 	
+	pub fn len(&self) -> usize {
+		self.upper_bound() - self.lower_bound() + 1
+	}
+	
 	pub const fn contains(&self, index: usize) -> Option<InCursor> {
 		if index == self.head {
 			Some(InCursor::Head)

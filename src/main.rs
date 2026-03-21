@@ -20,7 +20,10 @@ const BYTES_PER_CHUNK: usize = 4;
 const CHUNKS_PER_LINE: usize = BYTES_PER_LINE / BYTES_PER_CHUNK;
 
 // TODO:
+// - J jump to offset under cursor
+// - m mark offset
 // - search
+// - s/A-k/A-K
 // - modifications
 //   - insert/append
 //     - mode
@@ -36,18 +39,11 @@ const CHUNKS_PER_LINE: usize = BYTES_PER_LINE / BYTES_PER_CHUNK;
 // - jumplist
 // - y/p
 // - [/] to cycle view offset?
-// - J jump to offset
-//   - under cursor?
+// - gj jump to entered offset
 
 // future directions
-// - switch between cursor size u8s/u16s/u32s/u64s?
-//   - +/-
-// - multi-cursor
-//   - s/C
-//   - split selection by u8/16/32/etc
 // - 'views' for bytes (i8/16/etc u8/16/etc 20.12/8.4/etc)
 //   - how to fit??! `-128` longer than `80`
-// - mark offsets?
 // - utf8?
 // - diffing
 
@@ -71,7 +67,7 @@ fn main() {
 	
 	// dbg!(app.edit_history);
 	
-	for log in app.logs {
+	for log in app.buffers.iter().flat_map(|buffer| &buffer.logs) {
 		println!("{log}");
 	}
 }

@@ -27,6 +27,8 @@ pub struct Buffer {
 	pub time_traveling: Option<usize>,
 	// the index *after* the last saved edit action
 	pub last_saved_at: Option<usize>,
+	
+	pub logs: Vec<String>,
 }
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
@@ -93,6 +95,8 @@ impl Buffer {
 			edit_history: Vec::new(),
 			time_traveling: None,
 			last_saved_at: Some(0),
+			
+			logs: Vec::new(),
 		}
 	}
 	
@@ -173,7 +177,7 @@ impl Buffer {
 	pub fn combine_cursors_if_overlapping(&mut self) {
 		let mut index = 0;
 		
-		while !self.cursors.is_empty() && index < self.cursors.len() - 1 {
+		while !self.cursors.is_empty() && index < self.cursors.len() {
 			while index < self.cursors.len() - 1 &&
 				self.cursors[index].range().is_overlapping(
 					&self.cursors[index + 1].range())

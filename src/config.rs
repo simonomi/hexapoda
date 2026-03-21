@@ -95,6 +95,7 @@ impl From<KeyEvent> for Keypress {
 }
 
 impl Default for Config {
+	#[allow(clippy::too_many_lines)]
 	fn default() -> Self {
 		[
 			(Mode::Normal, [
@@ -150,6 +151,16 @@ impl Default for Config {
 					
 					(",".try_into().unwrap(), Action::KeepPrimarySelection),
 					("A-,".try_into().unwrap(), Action::RemovePrimarySelection),
+					
+					("1".try_into().unwrap(), Action::SplitSelectionsInto1s),
+					("2".try_into().unwrap(), Action::SplitSelectionsInto2s),
+					("3".try_into().unwrap(), Action::SplitSelectionsInto3s),
+					("4".try_into().unwrap(), Action::SplitSelectionsInto4s),
+					("5".try_into().unwrap(), Action::SplitSelectionsInto5s),
+					("6".try_into().unwrap(), Action::SplitSelectionsInto6s),
+					("7".try_into().unwrap(), Action::SplitSelectionsInto7s),
+					("8".try_into().unwrap(), Action::SplitSelectionsInto8s),
+					("9".try_into().unwrap(), Action::SplitSelectionsInto9s),
 				].into()),
 				(Some(PartialAction::Goto), [
 					("j".try_into().unwrap(), Action::GotoLineStart),
@@ -209,6 +220,16 @@ impl Default for Config {
 					
 					(",".try_into().unwrap(), Action::KeepPrimarySelection),
 					("A-,".try_into().unwrap(), Action::RemovePrimarySelection),
+					
+					("1".try_into().unwrap(), Action::SplitSelectionsInto1s),
+					("2".try_into().unwrap(), Action::SplitSelectionsInto2s),
+					("3".try_into().unwrap(), Action::SplitSelectionsInto3s),
+					("4".try_into().unwrap(), Action::SplitSelectionsInto4s),
+					("5".try_into().unwrap(), Action::SplitSelectionsInto5s),
+					("6".try_into().unwrap(), Action::SplitSelectionsInto6s),
+					("7".try_into().unwrap(), Action::SplitSelectionsInto7s),
+					("8".try_into().unwrap(), Action::SplitSelectionsInto8s),
+					("9".try_into().unwrap(), Action::SplitSelectionsInto9s),
 				].into()),
 				(Some(PartialAction::Space), [
 					("w".try_into().unwrap(), Action::Save),

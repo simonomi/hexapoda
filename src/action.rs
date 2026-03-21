@@ -1,4 +1,6 @@
 use std::{cmp::min, convert::identity, fs::File, io::Write, iter, mem::{replace, swap}};
+use ratatui::{style::Stylize, text::Span};
+
 use crate::{BYTES_PER_LINE, app::WindowSize, buffer::{Buffer, Mode, PartialAction}, cursor::Cursor, edit_action::EditAction};
 
 #[derive(Clone, Copy)]
@@ -69,6 +71,16 @@ pub enum Action {
 	
 	KeepPrimarySelection,
 	RemovePrimarySelection,
+	
+	SplitSelectionsInto1s,
+	SplitSelectionsInto2s,
+	SplitSelectionsInto3s,
+	SplitSelectionsInto4s,
+	SplitSelectionsInto5s,
+	SplitSelectionsInto6s,
+	SplitSelectionsInto7s,
+	SplitSelectionsInto8s,
+	SplitSelectionsInto9s,
 }
 
 // actions that act on the app as a whole, not just one buffer
@@ -149,6 +161,16 @@ impl Buffer {
 			
 			Action::KeepPrimarySelection => self.keep_primary_selection(),
 			Action::RemovePrimarySelection => self.remove_primary_selection(),
+			
+			Action::SplitSelectionsInto1s => self.split_selections_into_size(1),
+			Action::SplitSelectionsInto2s => self.split_selections_into_size(2),
+			Action::SplitSelectionsInto3s => self.split_selections_into_size(3),
+			Action::SplitSelectionsInto4s => self.split_selections_into_size(4),
+			Action::SplitSelectionsInto5s => self.split_selections_into_size(5),
+			Action::SplitSelectionsInto6s => self.split_selections_into_size(6),
+			Action::SplitSelectionsInto7s => self.split_selections_into_size(7),
+			Action::SplitSelectionsInto8s => self.split_selections_into_size(8),
+			Action::SplitSelectionsInto9s => self.split_selections_into_size(9),
 		}
 		
 		None
@@ -559,6 +581,30 @@ impl Buffer {
 		} else {
 			self.primary_cursor = self.cursors.remove(next_cursor_index);
 		}
+	}
+	
+	fn split_selections_into_size(&mut self, size: usize) {
+		if !iter::once(&self.primary_cursor)
+			.chain(&self.cursors)
+			.all(|cursor| cursor.len().is_multiple_of(size))
+		{
+			self.alert_message = Span::from(
+				format!("not all selections are a multiple of {size} long")
+			).red();
+			return;
+		}
+		
+		let mut new_cursors = iter::once(self.primary_cursor)
+			.chain(self.cursors.iter().copied())
+			.flat_map(|cursor| {
+				cursor
+					.range()
+					.step_by(size)
+					.map(|head| Cursor { head, tail: head + size - 1 })
+			});
+		
+		self.primary_cursor = new_cursors.next().unwrap();
+		self.cursors = new_cursors.collect();
 	}
 }
 

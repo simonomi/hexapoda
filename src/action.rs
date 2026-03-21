@@ -67,6 +67,7 @@ pub enum Action {
 	RotateSelectionsForward,
 	
 	KeepPrimarySelection,
+	RemovePrimarySelection,
 }
 
 // actions that act on the app as a whole, not just one buffer
@@ -145,6 +146,7 @@ impl Buffer {
 			Action::RotateSelectionsForward => self.rotate_selections_forward(),
 			
 			Action::KeepPrimarySelection => self.keep_primary_selection(),
+			Action::RemovePrimarySelection => self.remove_primary_selection(),
 		}
 		
 		None
@@ -531,6 +533,20 @@ impl Buffer {
 	
 	fn keep_primary_selection(&mut self) {
 		self.cursors.clear();
+	}
+	
+	fn remove_primary_selection(&mut self) {
+		if self.cursors.is_empty() { return; }
+		
+		let next_cursor_index = self.cursors
+			.binary_search_by_key(&self.primary_cursor.head, |cursor| cursor.head)
+			.unwrap_or_else(identity);
+		
+		if next_cursor_index == self.cursors.len() {
+			self.primary_cursor = self.cursors.remove(0);
+		} else {
+			self.primary_cursor = self.cursors.remove(next_cursor_index);
+		}
 	}
 }
 

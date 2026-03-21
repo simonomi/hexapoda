@@ -148,6 +148,7 @@ impl Default for Config {
 					(")".try_into().unwrap(), Action::RotateSelectionsForward),
 					
 					(",".try_into().unwrap(), Action::KeepPrimarySelection),
+					("A-,".try_into().unwrap(), Action::RemovePrimarySelection),
 				].into()),
 				(Some(PartialAction::Goto), [
 					("j".try_into().unwrap(), Action::GotoLineStart),
@@ -205,6 +206,7 @@ impl Default for Config {
 					(")".try_into().unwrap(), Action::RotateSelectionsForward),
 					
 					(",".try_into().unwrap(), Action::KeepPrimarySelection),
+					("A-,".try_into().unwrap(), Action::RemovePrimarySelection),
 				].into()),
 				(Some(PartialAction::Space), [
 					("w".try_into().unwrap(), Action::Save),

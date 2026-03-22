@@ -27,6 +27,7 @@ const LINES_OF_PADDING: usize = 5;
 const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 
 // TODO:
+// - some way to inspect just one interpretation
 // - search
 //   - ascii and bytes (`/` and `A-/`?)
 // - diffing

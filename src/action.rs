@@ -757,6 +757,7 @@ impl Buffer {
 		self.clamp_screen_to_primary_cursor(window_size);
 	}
 	
+	#[allow(clippy::too_many_lines)]
 	fn inspect_selection(&mut self) {
 		if self.inspecting_selection { return; }
 		
@@ -770,18 +771,16 @@ impl Buffer {
 					
 					let nat = bytes_to_nat(selection);
 					
-					let int = nat
-						.and_then(|nat| nat_to_int_if_different(nat, selection.len()))
-						.map(|int| Span::from(format!("{int}")).white());
+					let int = nat.and_then(|nat| nat_to_int_if_different(nat, selection.len()));
 					
 					let utf8 = str::from_utf8(selection).ok()
 						.map(|utf8| utf8.trim_suffix('\0'))
 						.filter(|utf8| !utf8.contains(is_illegal_control_character))
 						.map(|utf8| Span::from(format!("\"{utf8}\"")).red());
 					
-					#[allow(clippy::cast_precision_loss)]
 					let fixedpoint2012 = nat
-						.and_then(|nat| (selection.len() == 4).then(|| nat as f64 / f64::from(1 << 12)))
+						.filter(|_| selection.len() == 4)
+						.map(|nat| f64::from(nat as u32) / f64::from(1 << 12))
 						.map(|fixedpoint2012| {
 							let two_decimals_is_enough = (fixedpoint2012 * 100.0).fract() == 0.0;
 							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
@@ -789,9 +788,19 @@ impl Buffer {
 							format!("20.12: {approximate_symbol}{fixedpoint2012:.2}").into()
 						});
 					
-					#[allow(clippy::cast_precision_loss)]
+					let fixedpoint2012_signed = int
+						.filter(|_| selection.len() == 4)
+						.map(|int| f64::from(int as i32) / f64::from(1 << 12))
+						.map(|fixedpoint2012_signed| {
+							let two_decimals_is_enough = (fixedpoint2012_signed * 100.0).fract() == 0.0;
+							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
+							
+							format!("i20.12: {approximate_symbol}{fixedpoint2012_signed:.2}").into()
+						});
+					
 					let fixedpoint1616 = nat
-						.and_then(|nat| (selection.len() == 4).then(|| nat as f64 / f64::from(1 << 16)))
+						.filter(|_| selection.len() == 4)
+						.map(|nat| f64::from(nat as u32) / f64::from(1 << 16))
 						.map(|fixedpoint1616| {
 							let two_decimals_is_enough = (fixedpoint1616 * 100.0).fract() == 0.0;
 							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
@@ -799,9 +808,19 @@ impl Buffer {
 							format!("16.16: {approximate_symbol}{fixedpoint1616:.2}").into()
 						});
 					
-					#[allow(clippy::cast_precision_loss)]
+					let fixedpoint1616_signed = int
+						.filter(|_| selection.len() == 4)
+						.map(|int| f64::from(int as i32) / f64::from(1 << 16))
+						.map(|fixedpoint1616_signed| {
+							let two_decimals_is_enough = (fixedpoint1616_signed * 100.0).fract() == 0.0;
+							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
+							
+							format!("i16.16: {approximate_symbol}{fixedpoint1616_signed:.2}").into()
+						});
+					
 					let fixedpoint124 = nat
-						.and_then(|nat| (selection.len() == 2).then(|| nat as f64 / f64::from(1 << 4)))
+						.filter(|_| selection.len() == 2)
+						.map(|nat| f64::from(nat as u16) / f64::from(1 << 4))
 						.map(|fixedpoint124| {
 							let two_decimals_is_enough = (fixedpoint124 * 100.0).fract() == 0.0;
 							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
@@ -809,9 +828,9 @@ impl Buffer {
 							format!("12.4: {approximate_symbol}{fixedpoint124:.2}").into()
 						});
 					
-					#[allow(clippy::cast_precision_loss)]
 					let fixedpoint88 = nat
-						.and_then(|nat| (selection.len() == 2).then(|| nat as f64 / f64::from(1 << 8)))
+						.filter(|_| selection.len() == 2)
+						.map(|nat| f64::from(nat as u16) / f64::from(1 << 8))
 						.map(|fixedpoint88| {
 							let two_decimals_is_enough = (fixedpoint88 * 100.0).fract() == 0.0;
 							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
@@ -819,9 +838,9 @@ impl Buffer {
 							format!("8.8: {approximate_symbol}{fixedpoint88:.2}").into()
 						});
 					
-					#[allow(clippy::cast_precision_loss)]
 					let fixedpoint412 = nat
-						.and_then(|nat| (selection.len() == 2).then(|| nat as f64 / f64::from(1 << 12)))
+						.filter(|_| selection.len() == 2)
+						.map(|nat| f64::from(nat as u16) / f64::from(1 << 12))
 						.map(|fixedpoint412| {
 							let two_decimals_is_enough = (fixedpoint412 * 100.0).fract() == 0.0;
 							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
@@ -829,7 +848,7 @@ impl Buffer {
 							format!("4.12: {approximate_symbol}{fixedpoint412:.2}").into()
 						});
 					
-					let color = (selection.len() == 3)
+					let color888 = (selection.len() == 3)
 						.then(|| [selection[0], selection[1], selection[2]])
 						.map(|[red, green, blue]| {
 							Span::from(format!("#{red:02X}{green:02X}{blue:02X}"))
@@ -837,18 +856,31 @@ impl Buffer {
 							
 						});
 					
+					let color555 = nat
+						.filter(|_| selection.len() == 2)
+						.filter(|&nat| nat >> 15 == 0)
+						.map(|nat| color555_to_color888(nat as u16))
+						.map(|[red, green, blue]| {
+							Span::from(format!("555: #{red:02X}{green:02X}{blue:02X}"))
+								.fg(Color::Rgb(red, green, blue))
+							
+						});
+					
 					Popup::new(
 						cursor.lower_bound(),
-						int
+						int.map(|int| format!("{int}").into())
 							.into_iter()
-							.chain(nat.map(|nat| Span::from(format!("{nat}")).white()))
+							.chain(nat.map(|nat| format!("{nat}").into()))
 							.chain(utf8)
+							.chain(fixedpoint2012_signed)
 							.chain(fixedpoint2012)
+							.chain(fixedpoint1616_signed)
 							.chain(fixedpoint1616)
 							.chain(fixedpoint124)
 							.chain(fixedpoint88)
 							.chain(fixedpoint412)
-							.chain(color)
+							.chain(color888)
+							.chain(color555)
 							.collect()
 					)
 				})
@@ -935,4 +967,13 @@ const fn is_illegal_control_character(character: char) -> bool {
 		_ if character.is_ascii_control() => true,
 		_ => false,
 	}
+}
+
+const fn color555_to_color888(color555: u16) -> [u8; 3] {
+	[
+		// 8 is the ratio between the number of colors in 555 vs 888 (32:256)
+		(color555       & 0b11111) as u8 * 8,
+		(color555 >>  5 & 0b11111) as u8 * 8,
+		(color555 >> 10 & 0b11111) as u8 * 8
+	]
 }

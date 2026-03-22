@@ -1,6 +1,6 @@
 use std::{cmp::min, collections::hash_set::Entry, convert::identity, fs::File, io::Write, iter, mem::{replace, swap}};
 use ratatui::{style::Stylize, text::Span};
-use crate::{BYTES_OF_PADDING, BYTES_PER_LINE, LINES_OF_PADDING, app::WindowSize, buffer::{Buffer, Mode, PartialAction}, cursor::Cursor, edit_action::EditAction};
+use crate::{BYTES_OF_PADDING, BYTES_PER_LINE, LINES_OF_PADDING, app::WindowSize, buffer::{Buffer, Mode, PartialAction, Popup}, cursor::Cursor, edit_action::EditAction};
 
 #[derive(Clone, Copy)]
 pub enum Action {
@@ -88,6 +88,8 @@ pub enum BufferAction {
 	ExtendToMark,
 	ExtendToNull,
 	ExtendToFF,
+	
+	InspectSelection,
 }
 
 impl From<BufferAction> for Action {
@@ -193,6 +195,8 @@ impl Buffer {
 			BufferAction::ExtendToMark => self.extend_to_mark(window_size),
 			BufferAction::ExtendToNull => self.extend_to_null(window_size),
 			BufferAction::ExtendToFF => self.extend_to_FF(window_size),
+			
+			BufferAction::InspectSelection => self.inspect_selection(),
 		}
 	}
 	
@@ -550,6 +554,7 @@ impl Buffer {
 			.chain(&self.cursors)
 			.all(|cursor| {
 				bytes_to_nat(&self.contents[cursor.range()])
+					.map(|nat| nat as usize)
 					.is_some_and(|offset| offset < self.contents.len())
 			})
 		{
@@ -566,12 +571,12 @@ impl Buffer {
 		}
 		
 		self.primary_cursor = Cursor::at(
-			bytes_to_nat(&self.contents[self.primary_cursor.range()]).unwrap()
+			bytes_to_nat(&self.contents[self.primary_cursor.range()]).unwrap() as usize
 		);
 		
 		for cursor in &mut self.cursors {
 			*cursor = Cursor::at(
-				bytes_to_nat(&self.contents[cursor.range()]).unwrap()
+				bytes_to_nat(&self.contents[cursor.range()]).unwrap() as usize
 			);
 		}
 		
@@ -589,7 +594,7 @@ impl Buffer {
 			.chain(&self.cursors)
 			.all(|cursor| {
 				bytes_to_nat(&self.contents[cursor.range()])
-					.map(|offset| mark_before(cursor.lower_bound(), &sorted_marks) + offset)
+					.map(|offset| mark_before(cursor.lower_bound(), &sorted_marks) + offset as usize)
 					.is_some_and(|offset| offset < self.contents.len())
 			})
 		{
@@ -608,7 +613,7 @@ impl Buffer {
 		self.primary_cursor = Cursor::at(
 			bytes_to_nat(&self.contents[self.primary_cursor.range()])
 				.map(|offset| {
-					mark_before(self.primary_cursor.lower_bound(), &sorted_marks) + offset
+					mark_before(self.primary_cursor.lower_bound(), &sorted_marks) + offset as usize
 				})
 				.unwrap()
 		);
@@ -617,7 +622,7 @@ impl Buffer {
 			*cursor = Cursor::at(
 				bytes_to_nat(&self.contents[cursor.range()])
 				.map(|offset| {
-					mark_before(cursor.lower_bound(), &sorted_marks) + offset
+					mark_before(cursor.lower_bound(), &sorted_marks) + offset as usize
 				})
 				.unwrap()
 			);
@@ -745,6 +750,101 @@ impl Buffer {
 		
 		self.clamp_screen_to_primary_cursor(window_size);
 	}
+	
+	fn inspect_selection(&mut self) {
+		if self.inspecting_selection { return; }
+		
+		self.inspecting_selection = true;
+		
+		self.popups.extend(
+			iter::once(&self.primary_cursor)
+				.chain(&self.cursors)
+				.map(|cursor| {
+					let selection = &self.contents[cursor.range()];
+					
+					let nat = bytes_to_nat(selection);
+					
+					let int = nat.and_then(|nat| nat_to_int_if_different(nat, selection.len()));
+					
+					let utf8 = str::from_utf8(selection).ok()
+						.and_then(|utf8| {
+							if utf8.contains(|char: char| char.is_ascii() && !char.is_ascii_graphic()) {
+								None
+							} else {
+								Some(utf8)
+							}
+						})
+						.map(|utf8| utf8.replace('\0', "\\0"));
+					
+					#[allow(clippy::cast_precision_loss)]
+					let fixedpoint2012 = nat
+						.and_then(|nat| (selection.len() == 4).then(|| nat as f64 / f64::from(1 << 12)))
+						.map(|fixedpoint2012| {
+							let two_decimals_is_enough = (fixedpoint2012 * 100.0).fract() == 0.0;
+							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
+							
+							format!("20.12: {approximate_symbol}{fixedpoint2012:.2}")
+						});
+					
+					#[allow(clippy::cast_precision_loss)]
+					let fixedpoint1616 = nat
+						.and_then(|nat| (selection.len() == 4).then(|| nat as f64 / f64::from(1 << 16)))
+						.map(|fixedpoint1616| {
+							let two_decimals_is_enough = (fixedpoint1616 * 100.0).fract() == 0.0;
+							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
+							
+							format!("16.16: {approximate_symbol}{fixedpoint1616:.2}")
+						});
+					
+					#[allow(clippy::cast_precision_loss)]
+					let fixedpoint124 = nat
+						.and_then(|nat| (selection.len() == 2).then(|| nat as f64 / f64::from(1 << 4)))
+						.map(|fixedpoint124| {
+							let two_decimals_is_enough = (fixedpoint124 * 100.0).fract() == 0.0;
+							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
+							
+							format!("12.4: {approximate_symbol}{fixedpoint124:.2}")
+						});
+					
+					#[allow(clippy::cast_precision_loss)]
+					let fixedpoint88 = nat
+						.and_then(|nat| (selection.len() == 2).then(|| nat as f64 / f64::from(1 << 8)))
+						.map(|fixedpoint88| {
+							let two_decimals_is_enough = (fixedpoint88 * 100.0).fract() == 0.0;
+							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
+							
+							format!("8.8: {approximate_symbol}{fixedpoint88:.2}")
+						});
+					
+					#[allow(clippy::cast_precision_loss)]
+					let fixedpoint412 = nat
+						.and_then(|nat| (selection.len() == 2).then(|| nat as f64 / f64::from(1 << 12)))
+						.map(|fixedpoint412| {
+							let two_decimals_is_enough = (fixedpoint412 * 100.0).fract() == 0.0;
+							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
+							
+							format!("4.12: {approximate_symbol}{fixedpoint412:.2}")
+						});
+					
+					let color = (selection.len() == 3).then(|| [selection[0], selection[1], selection[2]]);
+					
+					Popup::new(
+						cursor.lower_bound(),
+						int.map(|int| format!("{int}"))
+							.into_iter()
+							.chain(nat.map(|nat| format!("{nat}")))
+							.chain(utf8.map(|utf8| format!("\"{utf8}\"")))
+							.chain(fixedpoint2012)
+							.chain(fixedpoint1616)
+							.chain(fixedpoint124)
+							.chain(fixedpoint88)
+							.chain(fixedpoint412)
+							.collect(),
+						color
+					)
+				})
+		);
+	}
 }
 
 // helpers
@@ -758,14 +858,37 @@ impl Buffer {
 	}
 }
 
-pub fn bytes_to_nat(bytes: &[u8]) -> Option<usize> {
+pub fn bytes_to_nat(bytes: &[u8]) -> Option<u64> {
 	bytes
 		.iter()
 		.rev() // little-endian
 		.skip_while(|&&byte| byte == 0)
-		.try_fold(usize::default(), |result, &byte| {
-			Some(result.shl_exact(8)? | (byte as usize))
+		.try_fold(u64::default(), |result, &byte| {
+			Some(result.shl_exact(8)? | u64::from(byte))
 		})
+}
+
+const fn nat_to_int_if_different(nat: u64, bytes: usize) -> Option<i64> {
+	match bytes {
+		1 if nat >  i8::MAX as u64 => Some((nat as u8).cast_signed() as i64),
+		2 if nat > i16::MAX as u64 => Some((nat as u16).cast_signed() as i64),
+		4 if nat > i32::MAX as u64 => Some((nat as u32).cast_signed() as i64),
+		8 if nat > i64::MAX as u64 => Some(nat.cast_signed()),
+		_ => None,
+	}
+}
+
+#[test]
+fn nat_to_int_tests() {
+	assert_eq!(nat_to_int_if_different(0, 1), None);
+	assert_eq!(nat_to_int_if_different(i8::MAX as u64,     1), None);
+	assert_eq!(nat_to_int_if_different(i8::MAX as u64 + 1, 1), Some(i8::MIN as i64));
+	assert_eq!(nat_to_int_if_different(u8::MAX as u64,     1), Some(-1));
+	
+	assert_eq!(nat_to_int_if_different(0, 2), None);
+	assert_eq!(nat_to_int_if_different(i16::MAX as u64,     2), None);
+	assert_eq!(nat_to_int_if_different(i16::MAX as u64 + 1, 2), Some(i16::MIN as i64));
+	assert_eq!(nat_to_int_if_different(u16::MAX as u64,     2), Some(-1));
 }
 
 // or 0 if no mark is before

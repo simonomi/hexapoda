@@ -26,7 +26,9 @@ const LINES_OF_PADDING: usize = 5;
 const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 
 // TODO:
-// - inspect selection
+// - 4 with large selection crashes
+//   - also (/)
+//   - also C-F in excavate_defs
 // - diffing
 // - search
 // - s/A-k/A-K
@@ -43,7 +45,7 @@ const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 //     - if jump to panel, space?
 // - visual gg/G
 // - jumplist
-// - y/p
+// - p
 // - [/] to cycle view offset?
 // - gj jump to entered offset
 

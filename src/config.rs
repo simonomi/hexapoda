@@ -167,6 +167,8 @@ impl Default for Config {
 					("m".try_into().unwrap(), BufferAction::ToggleMark.into()),
 					
 					("y".try_into().unwrap(), AppAction::Yank.into()),
+					
+					("C- ".try_into().unwrap(), BufferAction::InspectSelection.into()),
 				].into()),
 				(Some(PartialAction::Goto), [
 					("j".try_into().unwrap(), CursorAction::GotoLineStart.into()),
@@ -281,6 +283,8 @@ impl Default for Config {
 					("m".try_into().unwrap(), BufferAction::ToggleMark.into()),
 					
 					("y".try_into().unwrap(), AppAction::Yank.into()),
+					
+					("C- ".try_into().unwrap(), BufferAction::InspectSelection.into()),
 				].into()),
 				(Some(PartialAction::View), [
 					("z".try_into().unwrap(), BufferAction::AlignViewCenter.into()),

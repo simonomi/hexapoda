@@ -43,6 +43,22 @@ impl Widget for &Buffer {
 			.right_aligned()
 			.render(status_line_area, buf);
 		
+		for popup in &self.popups {
+			if self.scroll_position <= popup.at &&
+			   popup.at < self.scroll_position + (hex_area.height.saturating_sub(1) as usize * BYTES_PER_LINE)
+			{
+				let position_on_screen = popup.at - self.scroll_position;
+				let hex_column = position_on_screen % BYTES_PER_LINE;
+				
+				let popup_area = popup.area_at(
+					area.x + byte_column_to_screen_column(hex_column) as u16,
+					area.y + (position_on_screen / BYTES_PER_LINE) as u16 + 1
+				);
+				
+				popup.clone().render(popup_area, buf);
+			}
+		}
+		
 		// if self.partial_action == Some(PartialAction::Space) {
 		// 	let input_field_area = Rect::new(area.x, area.bottom() - 2, area.width, 1);
 		// 	Span::from("/0F673 ")
@@ -457,5 +473,31 @@ mod extra_statuses {
 				format!("{partial_action} {percentage:.0}% ").into()
 			}
 		}
+	}
+}
+
+fn byte_column_to_screen_column(byte_column: usize) -> usize {
+	match byte_column {
+		0 => 10,
+		1 => 13,
+		2 => 16,
+		3 => 19,
+		
+		4 => 23,
+		5 => 26,
+		6 => 29,
+		7 => 32,
+		
+		8 => 36,
+		9 => 39,
+		10 => 42,
+		11 => 45,
+		
+		12 => 49,
+		13 => 52,
+		14 => 55,
+		15 => 58,
+		
+		_ => panic!("byte column must be less than 16"),
 	}
 }

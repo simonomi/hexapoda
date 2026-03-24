@@ -30,6 +30,7 @@ const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 // - search
 //   - ascii and bytes (`/` and `A-/`?)
 // - diffing
+//   - doesn't have to be anything fancy, just compare each byte 1:1
 // - s/A-k/A-K
 //   - sm select marks
 // - C-a/C-x

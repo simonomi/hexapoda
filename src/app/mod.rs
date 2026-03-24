@@ -1,4 +1,4 @@
-use std::{env, process::exit};
+use std::{env, process::exit, time::Duration};
 use crossterm::{ExecutableCommand, event::{self, DisableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind}, terminal::window_size};
 use ratatui::{DefaultTerminal, style::Stylize, text::Span};
 use crate::{BYTES_PER_LINE, action::AppAction, buffer::Buffer, config::Config, cursor::Cursor};
@@ -67,10 +67,18 @@ impl App {
 	}
 	
 	pub fn handle_events(&mut self, terminal: &mut DefaultTerminal) {
+		self.handle_event(terminal);
+		
+		while event::poll(Duration::ZERO).unwrap() {
+			self.handle_event(terminal);
+		}
+	}
+	
+	pub fn handle_event(&mut self, terminal: &mut DefaultTerminal) {
 		match event::read().unwrap() {
 			Event::Resize(_, height) => {
 				self.window_size.rows = height as usize;
-				
+			
 				self.buffers[self.current_buffer_index]
 					.clamp_screen_to_primary_cursor(self.window_size);
 			}

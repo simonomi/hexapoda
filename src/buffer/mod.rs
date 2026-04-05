@@ -2,6 +2,7 @@ use core::slice::GetDisjointMutIndex;
 use std::{collections::HashSet, fs::File, io::Read, path::PathBuf};
 use crossterm::event::KeyEvent;
 use ratatui::{layout::{Constraint, Rect}, style::{Color, Stylize}, text::Span, widgets::{Block, Clear, Widget}};
+use serde::{Deserialize, Serialize};
 use crate::{BYTES_PER_LINE, action::{Action, AppAction, bytes_to_nat}, app::WindowSize, config::Config, cursor::Cursor, edit_action::EditAction};
 
 mod widget;
@@ -36,12 +37,16 @@ pub struct Buffer {
 	pub logs: Vec<String>,
 }
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug)]
+#[serde(rename_all = "snake_case")]
 pub enum Mode {
 	Normal, Select, Insert
 }
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug)]
+#[serde(rename_all = "snake_case")]
 pub enum PartialAction {
 	Goto, View, Replace, Space, Repeat, To
 }
@@ -73,13 +78,33 @@ impl Mode {
 
 impl PartialAction {
 	pub const fn label(self) -> &'static str {
+		use PartialAction::*;
+		
 		match self {
-			Self::Goto => "g",
-			Self::View => "z",
-			Self::Replace => "r",
-			Self::Space => "␠",
-			Self::Repeat => "×",
-			Self::To => "t",
+			Goto => "g",
+			View => "z",
+			Replace => "r",
+			Space => "␠",
+			Repeat => "×",
+			To => "t",
+		}
+	}
+}
+
+impl TryFrom<&str> for PartialAction {
+	type Error = ();
+	
+	fn try_from(value: &str) -> Result<Self, Self::Error> {
+		use PartialAction::*;
+		
+		match value {
+			"goto" => Ok(Goto),
+			"view" => Ok(View),
+			"replace" => Ok(Replace),
+			"space" => Ok(Space),
+			"repeat" => Ok(Repeat),
+			"to" => Ok(To),
+			_ => Err(()),
 		}
 	}
 }

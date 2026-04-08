@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, hash_map::Entry}, fmt::{self, Formatter}};
+use std::{collections::{HashMap, hash_map::Entry}, env::{self, home_dir}, fmt::{self, Formatter}, fs::read_to_string, io, path::PathBuf};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use crate::{action::{Action, AppAction, BufferAction, CursorAction}, buffer::{Mode, PartialAction}};
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de::{Error, MapAccess, Unexpected, Visitor}, ser::SerializeMap};
@@ -30,6 +30,46 @@ pub struct Keypress {
 	modifiers: KeyModifiers
 }
 
+impl Config {
+	#[cfg(unix)]
+	fn path() -> Option<PathBuf> {
+		env::var_os("XDG_CONFIG_HOME")
+			.map(PathBuf::from)
+			.take_if(|xdg_config_home| xdg_config_home.is_absolute())
+			.or_else(|| home_dir().map(|home| home.join(".config")))
+			.map(|config_path| config_path.join("hexapoda.toml"))
+	}
+	
+	#[cfg(windows)]
+	fn path() -> Option<PathBuf> {
+		// this isn't technically the right way but it should be good enough
+		home_dir().map(|home| home.join("AppData").join("Roaming"))
+	}
+	
+	pub fn init() -> Result<Self, ConfigInitError> {
+		let path = Self::path().ok_or(ConfigInitError::NoConfigPath)?;
+		let raw_config = read_to_string(path)?;
+		
+		Ok(toml::from_str(&raw_config)?)
+	}
+}
+
+pub enum ConfigInitError {
+	NoConfigPath, IO(io::Error), Deserialization(toml::de::Error)
+}
+
+impl From<io::Error> for ConfigInitError {
+	fn from(error: io::Error) -> Self {
+		Self::IO(error)
+	}
+}
+
+impl From<toml::de::Error> for ConfigInitError {
+	fn from(error: toml::de::Error) -> Self {
+		Self::Deserialization(error)
+	}
+}
+
 impl Serialize for ModeConfig {
 	fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
 		let mut map = serializer.serialize_map(None)?;
@@ -47,7 +87,7 @@ impl Serialize for ModeConfig {
 			let Some(partial_action) = partial_action else { continue };
 			
 			map.serialize_entry(
-				partial_action.into(),
+				partial_action,
 				keybinds
 			)?;
 		}
@@ -175,7 +215,7 @@ impl TryFrom<&str> for Keypress {
 					),
 					modifiers: modifier_from_character(
 						string.chars().nth(0).unwrap()
-					).ok_or(format!("unknown modifier: {}", string.chars().nth(0).unwrap()))?,
+					).ok_or_else(|| format!("unknown modifier: {}", string.chars().nth(0).unwrap()))?,
 				})
 			}
 			1 => {
@@ -185,7 +225,7 @@ impl TryFrom<&str> for Keypress {
 					).into()
 				)
 			}
-			_ => Err(format!("invalid keypress: {}. only one modifier is allowed", string))
+			_ => Err(format!("invalid keypress: {string}. only one modifier is allowed"))
 		}
 	}
 }
@@ -202,7 +242,7 @@ impl From<&Keypress> for String {
 
 impl From<Keypress> for String {
 	fn from(value: Keypress) -> Self {
-		String::from(&value)
+		Self::from(&value)
 	}
 }
 

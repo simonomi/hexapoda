@@ -98,7 +98,7 @@ mod address {
 		}
 	}
 	
-	pub fn style_for_address(address: usize) -> Style {
+	pub const fn style_for_address(address: usize) -> Style {
 		if address.is_multiple_of(0x100) {
 			Style::new().fg(Color::Rgb(0x68, 0x99, 0xA0))
 		} else {
@@ -108,9 +108,9 @@ mod address {
 }
 
 mod hex {
-	use std::{borrow::Cow, iter, mem};
-	use itertools::{Itertools, repeat_n};
-	use ratatui::{style::{Color, Style, Stylize}, text::Span};
+	use std::{borrow::Cow, iter::{self, repeat_n}, mem};
+	use itertools::Itertools;
+use ratatui::{style::{Color, Style, Stylize}, text::Span};
 	
 	use crate::{BYTES_PER_CHUNK, BYTES_PER_LINE, CHUNKS_PER_LINE, buffer::{Buffer, Mode, PartialAction}, cardinality::HasCardinality, cursor::InCursor, custom_greys::CustomGreys, empty_span::empty_span};
 	
@@ -173,7 +173,6 @@ mod hex {
 			address: usize,
 			bytes: &[u8; BYTES_PER_CHUNK]
 		) -> impl Iterator<Item=Span<'static>> {
-			#[allow(unstable_name_collisions)]
 			iter::once(self.render_large_space_before(address))
 				.chain(
 					bytes
@@ -195,7 +194,6 @@ mod hex {
 			address: usize,
 			bytes: &[u8]
 		) -> impl Iterator<Item=Span<'static>> {
-			#[allow(unstable_name_collisions)]
 			iter::once(self.render_large_space_before(address))
 				.chain(
 					bytes

@@ -25,8 +25,7 @@ currently, hexapoda is very unpolished, and missing some major features. if you'
 
 ### notable features that are missing (for now)
 
-- inserting bytes
-	- only replacing and deleting right now
-- custom keybinds
 - search
 - diffing
+- inserting bytes
+	- only replacing and deleting right now

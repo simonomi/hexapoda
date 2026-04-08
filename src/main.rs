@@ -1,16 +1,13 @@
 #![warn(clippy::pedantic, clippy::nursery)]
 #![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::enum_glob_use)]
 #![feature(get_disjoint_mut_helpers)]
 #![feature(exact_bitshifts)]
 #![feature(hash_set_entry)]
 #![feature(trim_prefix_suffix)]
 
-use std::fs::read_to_string;
-
 use app::App;
 use crossterm::{QueueableCommand, event::{DisableMouseCapture, EnableMouseCapture}};
-
-use crate::config::Config;
 
 mod app;
 mod buffer;
@@ -59,16 +56,6 @@ const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 //   - how to fit??! `-128` longer than `80`
 
 fn main() {
-	// let config = Config::default();
-	// let toml_string = toml::to_string_pretty(&config);
-	// println!("{}", toml_string.unwrap());
-	
-	// let string = read_to_string("/Users/simonomi/Desktop/hexapoda_config.toml").unwrap();
-	// let config: Config = toml::from_str(&string).unwrap();
-	// dbg!(config.0);
-	
-	// return;
-	
 	let mut app = App::new();
 	let mut terminal = ratatui::init();
 	crossterm::terminal::enable_raw_mode().unwrap();

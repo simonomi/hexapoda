@@ -27,10 +27,10 @@ impl TryFrom<&str> for Action {
 	type Error = String;
 	
 	fn try_from(string: &str) -> Result<Self, String> {
-		AppAction::try_from(string).map(Action::from)
-			.or_else(|_| BufferAction::try_from(string).map(Action::from))
-			.or_else(|_| CursorAction::try_from(string).map(Action::from))
-			.map_err(|_| format!("invalid action: {}", string))
+		AppAction::try_from(string).map(Self::from)
+			.or_else(|()| BufferAction::try_from(string).map(Self::from))
+			.or_else(|()| CursorAction::try_from(string).map(Self::from))
+			.map_err(|()| format!("invalid action: {string}"))
 	}
 }
 
@@ -1249,13 +1249,13 @@ const fn nat_to_int_if_different(nat: u64, bytes: usize) -> Option<i64> {
 fn nat_to_int_tests() {
 	assert_eq!(nat_to_int_if_different(0, 1), None);
 	assert_eq!(nat_to_int_if_different(i8::MAX as u64,     1), None);
-	assert_eq!(nat_to_int_if_different(i8::MAX as u64 + 1, 1), Some(i8::MIN as i64));
-	assert_eq!(nat_to_int_if_different(u8::MAX as u64,     1), Some(-1));
+	assert_eq!(nat_to_int_if_different(i8::MAX as u64 + 1, 1), Some(i8::MIN.into()));
+	assert_eq!(nat_to_int_if_different(u8::MAX.into(),     1), Some(-1));
 	
 	assert_eq!(nat_to_int_if_different(0, 2), None);
 	assert_eq!(nat_to_int_if_different(i16::MAX as u64,     2), None);
-	assert_eq!(nat_to_int_if_different(i16::MAX as u64 + 1, 2), Some(i16::MIN as i64));
-	assert_eq!(nat_to_int_if_different(u16::MAX as u64,     2), Some(-1));
+	assert_eq!(nat_to_int_if_different(i16::MAX as u64 + 1, 2), Some(i16::MIN.into()));
+	assert_eq!(nat_to_int_if_different(u16::MAX.into(),     2), Some(-1));
 }
 
 // or 0 if no mark is before

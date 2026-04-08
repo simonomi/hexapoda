@@ -1,7 +1,7 @@
-use std::{env, process::exit, time::Duration};
+use std::{env::{self}, io::{self}, process::exit, time::Duration};
 use crossterm::{ExecutableCommand, event::{self, DisableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind}, terminal::window_size};
 use ratatui::{DefaultTerminal, style::Stylize, text::Span};
-use crate::{BYTES_PER_LINE, action::AppAction, buffer::Buffer, config::Config, cursor::Cursor};
+use crate::{BYTES_PER_LINE, action::AppAction, buffer::Buffer, config::{Config, ConfigInitError}, cursor::Cursor};
 
 mod widget;
 
@@ -29,6 +29,29 @@ pub struct WindowSize {
 
 impl App {
 	pub fn new() -> Self {
+		let config = {
+			let config = Config::init();
+			
+			match &config {
+				Err(ConfigInitError::IO(io_error)) if io_error.kind() != io::ErrorKind::NotFound => {
+					eprintln!("IO error while reading config, press <ENTER> to continue with default config");
+					
+					let mut temp = String::new();
+					let _ = io::stdin().read_line(&mut temp);
+				}
+				Err(ConfigInitError::Deserialization(deserialization_error)) => {
+					eprintln!("bad config: {deserialization_error}");
+					eprintln!("press <ENTER> to continue with default config");
+					
+					let mut temp = String::new();
+					let _ = io::stdin().read_line(&mut temp);
+				}
+				_ => {}
+			}
+			
+			config.unwrap_or_default()
+		};
+		
 		let buffers: Vec<Buffer> = env::args()
 				.skip(1)
 				.map(Into::into)
@@ -50,7 +73,7 @@ impl App {
 		};
 		
 		Self {
-			config: Config::default(),
+			config,
 			
 			buffers,
 			current_buffer_index: 0,

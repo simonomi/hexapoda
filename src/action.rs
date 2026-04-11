@@ -13,6 +13,18 @@ pub enum Action {
 	Cursor(CursorAction),
 }
 
+impl Action {
+	pub const fn clears_popups(self) -> bool {
+		use Action::*;
+		
+		match self {
+			App(app_action) => app_action.clears_popups(),
+			Buffer(buffer_action) => buffer_action.clears_popups(),
+			Cursor(cursor_action) => cursor_action.clears_popups(),
+		}
+	}
+}
+
 impl From<Action> for &str {
 	fn from(action: Action) -> Self {
 		match action {
@@ -44,6 +56,23 @@ pub enum AppAction {
 	NextBuffer,
 	
 	Yank,
+}
+
+impl AppAction {
+	const fn clears_popups(self) -> bool {
+		use AppAction::*;
+		
+		#[allow(clippy::match_same_arms)]
+		match self {
+			QuitIfSaved => true,
+			Quit => true,
+			
+			PreviousBuffer => false,
+			NextBuffer => false,
+			
+			Yank => false,
+		}
+	}
 }
 
 impl From<AppAction> for &str {
@@ -153,6 +182,78 @@ pub enum BufferAction {
 	
 	InspectSelection,
 	InspectSelectionColor,
+}
+
+impl BufferAction {
+	const fn clears_popups(self) -> bool {
+		use BufferAction::*;
+		
+		#[allow(clippy::match_same_arms)]
+		match self {
+			NormalMode => false,
+			SelectMode => false,
+			
+			Goto => false,
+			View => false,
+			Replace => true,
+			Space => false,
+			Repeat => true,
+			To => false,
+			
+			ScrollDown => true,
+			ScrollUp => true,
+			
+			PageCursorHalfDown => true,
+			PageCursorHalfUp => true,
+			
+			PageDown => true,
+			PageUp => true,
+			
+			CollapseSelection => true,
+			FlipSelections => false,
+			
+			Delete => true,
+			
+			Undo => true,
+			Redo => true,
+			
+			Save => false,
+			
+			CopySelectionOnNextLine => true,
+			
+			RotateSelectionsBackward => false,
+			RotateSelectionsForward => false,
+			
+			KeepPrimarySelection => true,
+			RemovePrimarySelection => true,
+			
+			SplitSelectionsInto1s => true,
+			SplitSelectionsInto2s => true,
+			SplitSelectionsInto3s => true,
+			SplitSelectionsInto4s => true,
+			SplitSelectionsInto5s => true,
+			SplitSelectionsInto6s => true,
+			SplitSelectionsInto7s => true,
+			SplitSelectionsInto8s => true,
+			SplitSelectionsInto9s => true,
+			
+			JumpToSelectedOffset => true,
+			JumpToSelectedOffsetRelativeToMark => true,
+			
+			ToggleMark => false,
+			
+			AlignViewCenter => false,
+			AlignViewBottom => false,
+			AlignViewTop => false,
+			
+			ExtendToMark => true,
+			ExtendToNull => true,
+			ExtendToFF => true,
+			
+			InspectSelection => true,
+			InspectSelectionColor => true,
+		}
+	}
 }
 
 impl From<BufferAction> for &str {
@@ -336,6 +437,41 @@ pub enum CursorAction {
 	
 	ExtendLineBelow,
 	ExtendLineAbove,
+}
+
+impl CursorAction {
+	const fn clears_popups(self) -> bool {
+		use CursorAction::*;
+		
+		#[allow(clippy::match_same_arms)]
+		match self {
+			MoveByteUp => true,
+			MoveByteDown => true,
+			MoveByteLeft => true,
+			MoveByteRight => true,
+			
+			ExtendByteUp => true,
+			ExtendByteDown => true,
+			ExtendByteLeft => true,
+			ExtendByteRight => true,
+			
+			GotoLineStart => true,
+			GotoLineEnd => true,
+			GotoFileStart => true,
+			GotoFileEnd => true,
+			
+			MoveNextWordStart => true,
+			MoveNextWordEnd => true,
+			MovePreviousWordStart => true,
+			
+			ExtendNextWordStart => true,
+			ExtendNextWordEnd => true,
+			ExtendPreviousWordStart => true,
+			
+			ExtendLineBelow => true,
+			ExtendLineAbove => true,
+		}
+	}
 }
 
 impl From<CursorAction> for &str {
@@ -1050,125 +1186,22 @@ impl Buffer {
 		self.popups.extend(
 			iter::once(&self.primary_cursor)
 				.chain(&self.cursors)
-				.map(|cursor| {
+				.filter_map(|cursor| {
 					let selection = &self.contents[cursor.range()];
 					
-					let nat = bytes_to_nat(selection);
+					let popup_lines = inspect(selection);
 					
-					let int = nat.and_then(|nat| nat_to_int_if_different(nat, selection.len()));
-					
-					let utf8 = str::from_utf8(selection).ok()
-						.map(|utf8| utf8.trim_suffix('\0'))
-						.filter(|utf8| !utf8.contains(is_illegal_control_character))
-						.map(|utf8| Span::from(format!("\"{utf8}\"")).red());
-					
-					let fixedpoint2012 = nat
-						.filter(|_| selection.len() == 4)
-						.map(|nat| f64::from(nat as u32) / f64::from(1 << 12))
-						.map(|fixedpoint2012| {
-							let two_decimals_is_enough = (fixedpoint2012 * 100.0).fract() == 0.0;
-							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
-							
-							format!("20.12: {approximate_symbol}{fixedpoint2012:.2}").into()
-						});
-					
-					let fixedpoint2012_signed = int
-						.filter(|_| selection.len() == 4)
-						.map(|int| f64::from(int as i32) / f64::from(1 << 12))
-						.map(|fixedpoint2012_signed| {
-							let two_decimals_is_enough = (fixedpoint2012_signed * 100.0).fract() == 0.0;
-							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
-							
-							format!("i20.12: {approximate_symbol}{fixedpoint2012_signed:.2}").into()
-						});
-					
-					let fixedpoint1616 = nat
-						.filter(|_| selection.len() == 4)
-						.map(|nat| f64::from(nat as u32) / f64::from(1 << 16))
-						.map(|fixedpoint1616| {
-							let two_decimals_is_enough = (fixedpoint1616 * 100.0).fract() == 0.0;
-							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
-							
-							format!("16.16: {approximate_symbol}{fixedpoint1616:.2}").into()
-						});
-					
-					let fixedpoint1616_signed = int
-						.filter(|_| selection.len() == 4)
-						.map(|int| f64::from(int as i32) / f64::from(1 << 16))
-						.map(|fixedpoint1616_signed| {
-							let two_decimals_is_enough = (fixedpoint1616_signed * 100.0).fract() == 0.0;
-							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
-							
-							format!("i16.16: {approximate_symbol}{fixedpoint1616_signed:.2}").into()
-						});
-					
-					let fixedpoint124 = nat
-						.filter(|_| selection.len() == 2)
-						.map(|nat| f64::from(nat as u16) / f64::from(1 << 4))
-						.map(|fixedpoint124| {
-							let two_decimals_is_enough = (fixedpoint124 * 100.0).fract() == 0.0;
-							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
-							
-							format!("12.4: {approximate_symbol}{fixedpoint124:.2}").into()
-						});
-					
-					let fixedpoint88 = nat
-						.filter(|_| selection.len() == 2)
-						.map(|nat| f64::from(nat as u16) / f64::from(1 << 8))
-						.map(|fixedpoint88| {
-							let two_decimals_is_enough = (fixedpoint88 * 100.0).fract() == 0.0;
-							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
-							
-							format!("8.8: {approximate_symbol}{fixedpoint88:.2}").into()
-						});
-					
-					let fixedpoint412 = nat
-						.filter(|_| selection.len() == 2)
-						.map(|nat| f64::from(nat as u16) / f64::from(1 << 12))
-						.map(|fixedpoint412| {
-							let two_decimals_is_enough = (fixedpoint412 * 100.0).fract() == 0.0;
-							let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
-							
-							format!("4.12: {approximate_symbol}{fixedpoint412:.2}").into()
-						});
-					
-					let color888 = (selection.len() == 3)
-						.then(|| [selection[0], selection[1], selection[2]])
-						.map(|[red, green, blue]| {
-							Span::from(format!("#{red:02X}{green:02X}{blue:02X}"))
-								.fg(Color::Rgb(red, green, blue))
-							
-						});
-					
-					let color555 = nat
-						.filter(|_| selection.len() == 2)
-						.filter(|&nat| nat >> 15 == 0)
-						.map(|nat| color555_to_color888(nat as u16))
-						.map(|[red, green, blue]| {
-							Span::from(format!("555: #{red:02X}{green:02X}{blue:02X}"))
-								.fg(Color::Rgb(red, green, blue))
-							
-						});
-					
-					Popup::new(
-						cursor.lower_bound(),
-						int.map(|int| format!("{int}").into())
-							.into_iter()
-							.chain(nat.map(|nat| format!("{nat}").into()))
-							.chain(utf8)
-							.chain(fixedpoint2012_signed)
-							.chain(fixedpoint2012)
-							.chain(fixedpoint1616_signed)
-							.chain(fixedpoint1616)
-							.chain(fixedpoint124)
-							.chain(fixedpoint88)
-							.chain(fixedpoint412)
-							.chain(color888)
-							.chain(color555)
-							.collect()
-					)
+					if popup_lines.is_empty() {
+						None
+					} else {
+						Some(Popup::new(cursor.lower_bound(), popup_lines))
+					}
 				})
 		);
+		
+		if self.popups.is_empty() {
+			self.inspecting_selection = false;
+		}
 	}
 	
 	fn inspect_selection_color(&mut self) {
@@ -1179,39 +1212,165 @@ impl Buffer {
 		self.popups.extend(
 			iter::once(&self.primary_cursor)
 				.chain(&self.cursors)
-				.map(|cursor| {
+				.filter_map(|cursor| {
 					let selection = &self.contents[cursor.range()];
 					
-					let nat = bytes_to_nat(selection);
+					let popup_lines = inspect_color(selection);
 					
-					let color888 = (selection.len() == 3)
-						.then(|| [selection[0], selection[1], selection[2]])
-						.map(|[red, green, blue]| {
-							Span::from(format!("#{red:02X}{green:02X}{blue:02X}"))
-								.fg(Color::Rgb(red, green, blue))
-							
-						});
-					
-					let color555 = nat
-						.filter(|_| selection.len() == 2)
-						.filter(|&nat| nat >> 15 == 0)
-						.map(|nat| color555_to_color888(nat as u16))
-						.map(|[red, green, blue]| {
-							Span::from(format!("#{red:02X}{green:02X}{blue:02X}"))
-								.fg(Color::Rgb(red, green, blue))
-							
-						});
-					
-					Popup::new(
-						cursor.lower_bound(),
-						color888
-							.into_iter()
-							.chain(color555)
-							.collect()
-					)
+					if popup_lines.is_empty() {
+						None
+					} else {
+						Some(Popup::new(cursor.lower_bound(), popup_lines))
+					}
 				})
 		);
+		
+		if self.popups.is_empty() {
+			self.inspecting_selection = false;
+		}
 	}
+}
+
+fn inspect(selection: &[u8]) -> Vec<Span<'static>> {
+	let nat = bytes_to_nat(selection);
+	
+	let int = nat.and_then(|nat| nat_to_int_if_different(nat, selection.len()));
+	
+	let utf8 = str::from_utf8(selection).ok()
+		.filter(|_| selection.len() == 1)
+		.map(|utf8| utf8.trim_suffix('\0'))
+		.filter(|utf8| !utf8.contains(is_illegal_control_character))
+		.map(|utf8| Span::from(format!("\"{utf8}\"")).red());
+	
+	let fixedpoint2012 = nat
+		.filter(|_| selection.len() == 4)
+		.map(|nat| f64::from(nat as u32) / f64::from(1 << 12))
+		.map(|fixedpoint2012| {
+			let two_decimals_is_enough = (fixedpoint2012 * 100.0).fract() == 0.0;
+			let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
+			
+			format!("20.12: {approximate_symbol}{fixedpoint2012:.2}").into()
+		});
+	
+	let fixedpoint2012_signed = int
+		.filter(|_| selection.len() == 4)
+		.map(|int| f64::from(int as i32) / f64::from(1 << 12))
+		.map(|fixedpoint2012_signed| {
+			let two_decimals_is_enough = (fixedpoint2012_signed * 100.0).fract() == 0.0;
+			let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
+			
+			format!("i20.12: {approximate_symbol}{fixedpoint2012_signed:.2}").into()
+		});
+	
+	let fixedpoint1616 = nat
+		.filter(|_| selection.len() == 4)
+		.map(|nat| f64::from(nat as u32) / f64::from(1 << 16))
+		.map(|fixedpoint1616| {
+			let two_decimals_is_enough = (fixedpoint1616 * 100.0).fract() == 0.0;
+			let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
+			
+			format!("16.16: {approximate_symbol}{fixedpoint1616:.2}").into()
+		});
+	
+	let fixedpoint1616_signed = int
+		.filter(|_| selection.len() == 4)
+		.map(|int| f64::from(int as i32) / f64::from(1 << 16))
+		.map(|fixedpoint1616_signed| {
+			let two_decimals_is_enough = (fixedpoint1616_signed * 100.0).fract() == 0.0;
+			let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
+			
+			format!("i16.16: {approximate_symbol}{fixedpoint1616_signed:.2}").into()
+		});
+	
+	let fixedpoint124 = nat
+		.filter(|_| selection.len() == 2)
+		.map(|nat| f64::from(nat as u16) / f64::from(1 << 4))
+		.map(|fixedpoint124| {
+			let two_decimals_is_enough = (fixedpoint124 * 100.0).fract() == 0.0;
+			let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
+			
+			format!("12.4: {approximate_symbol}{fixedpoint124:.2}").into()
+		});
+	
+	let fixedpoint88 = nat
+		.filter(|_| selection.len() == 2)
+		.map(|nat| f64::from(nat as u16) / f64::from(1 << 8))
+		.map(|fixedpoint88| {
+			let two_decimals_is_enough = (fixedpoint88 * 100.0).fract() == 0.0;
+			let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
+			
+			format!("8.8: {approximate_symbol}{fixedpoint88:.2}").into()
+		});
+	
+	let fixedpoint412 = nat
+		.filter(|_| selection.len() == 2)
+		.map(|nat| f64::from(nat as u16) / f64::from(1 << 12))
+		.map(|fixedpoint412| {
+			let two_decimals_is_enough = (fixedpoint412 * 100.0).fract() == 0.0;
+			let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
+			
+			format!("4.12: {approximate_symbol}{fixedpoint412:.2}").into()
+		});
+	
+	let color888 = (selection.len() == 3)
+		.then(|| [selection[0], selection[1], selection[2]])
+		.map(|[red, green, blue]| {
+			Span::from(format!("#{red:02X}{green:02X}{blue:02X}"))
+				.fg(Color::Rgb(red, green, blue))
+			
+		});
+	
+	let color555 = nat
+		.filter(|_| selection.len() == 2)
+		.filter(|&nat| nat >> 15 == 0)
+		.map(|nat| color555_to_color888(nat as u16))
+		.map(|[red, green, blue]| {
+			Span::from(format!("555: #{red:02X}{green:02X}{blue:02X}"))
+				.fg(Color::Rgb(red, green, blue))
+			
+		});
+	
+	int.map(|int| format!("{int}").into())
+		.into_iter()
+		.chain(nat.map(|nat| format!("{nat}").into()))
+		.chain(utf8)
+		.chain(fixedpoint2012_signed)
+		.chain(fixedpoint2012)
+		.chain(fixedpoint1616_signed)
+		.chain(fixedpoint1616)
+		.chain(fixedpoint124)
+		.chain(fixedpoint88)
+		.chain(fixedpoint412)
+		.chain(color888)
+		.chain(color555)
+		.collect()
+}
+
+fn inspect_color(selection: &[u8]) -> Vec<Span<'static>> {
+	let nat = bytes_to_nat(selection);
+	
+	let color888 = (selection.len() == 3)
+		.then(|| [selection[0], selection[1], selection[2]])
+		.map(|[red, green, blue]| {
+			Span::from(format!("#{red:02X}{green:02X}{blue:02X}"))
+				.fg(Color::Rgb(red, green, blue))
+			
+		});
+	
+	let color555 = nat
+		.filter(|_| selection.len() == 2)
+		.filter(|&nat| nat >> 15 == 0)
+		.map(|nat| color555_to_color888(nat as u16))
+		.map(|[red, green, blue]| {
+			Span::from(format!("#{red:02X}{green:02X}{blue:02X}"))
+				.fg(Color::Rgb(red, green, blue))
+			
+		});
+	
+	color888
+		.into_iter()
+		.chain(color555)
+		.collect()
 }
 
 // helpers

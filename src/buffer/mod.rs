@@ -209,11 +209,7 @@ impl Buffer {
 		window_size: WindowSize
 	) -> Option<AppAction> {
 		self.alert_message = "".into();
-		self.popups.clear();
-		
 		// self.logs.push(format!("{event:?}"));
-		
-		let was_inspecting_selection = self.inspecting_selection;
 		
 		let app_action = match self.partial_action {
 			Some(PartialAction::Replace) => {
@@ -232,10 +228,6 @@ impl Buffer {
 			},
 			_ => self.handle_other_modes(event, config, window_size),
 		};
-		
-		if was_inspecting_selection {
-			self.inspecting_selection = false;
-		}
 		
 		assert!(self.scroll_position.is_multiple_of(BYTES_PER_LINE));
 		assert!(self.scroll_position < self.contents.len());
@@ -289,6 +281,12 @@ impl Buffer {
 		   let Some(keybinds) = mode_config.0.get(&self.partial_action) &&
 		   let Some(action) = keybinds.0.get(&event.into())
 		{
+			if action.clears_popups() {
+				self.popups.clear();
+			}
+			
+			let was_inspecting_selection = self.inspecting_selection;
+			
 			match action {
 				Action::App(app_action) => result = Some(*app_action),
 				Action::Buffer(buffer_action) => self.execute(*buffer_action, window_size),
@@ -305,6 +303,10 @@ impl Buffer {
 					self.combine_cursors_if_overlapping();
 					self.clamp_screen_to_primary_cursor(window_size);
 				},
+			}
+			
+			if was_inspecting_selection {
+				self.inspecting_selection = false;
 			}
 		}
 		

@@ -2,7 +2,7 @@
 
 a colorful modal hex editor
 
-(the name comes from [the subphylum](https://wikipedia.org/wiki/Hexapoda))
+(the name comes from [the subphylum](https://en.wikipedia.org/wiki/Hexapoda))
 
 [![asciicast](https://asciinema.org/a/fsVwqdn846Ar5CQZ.svg)](https://asciinema.org/a/fsVwqdn846Ar5CQZ)
 

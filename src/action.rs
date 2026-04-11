@@ -1,4 +1,5 @@
 use std::{cmp::min, collections::hash_set::Entry, convert::identity, fs::File, io::Write, iter, mem::{replace, swap}};
+use itertools::Itertools;
 use ratatui::{style::{Color, Stylize}, text::Span};
 use serde::{Deserialize, Serialize};
 use crate::{BYTES_OF_PADDING, BYTES_PER_LINE, LINES_OF_PADDING, app::WindowSize, buffer::{Buffer, InspectionStatus, Mode, PartialAction, Popup}, cursor::Cursor, edit_action::EditAction};
@@ -1207,6 +1208,7 @@ impl Buffer {
 						Some(Popup::new(cursor.lower_bound(), popup_lines))
 					}
 				})
+				.sorted_unstable_by_key(|popup| popup.at)
 		);
 		
 		if self.popups.is_empty() {
@@ -1236,6 +1238,7 @@ impl Buffer {
 						Some(Popup::new(cursor.lower_bound(), popup_lines))
 					}
 				})
+				.sorted_unstable_by_key(|popup| popup.at)
 		);
 		
 		if self.popups.is_empty() {

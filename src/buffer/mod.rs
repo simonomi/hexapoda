@@ -53,7 +53,7 @@ pub enum PartialAction {
 
 #[derive(Clone)]
 pub struct Popup {
-	at: usize,
+	pub at: usize,
 	width: u16,
 	primary: bool,
 	lines: Vec<Span<'static>>
@@ -310,7 +310,7 @@ impl Buffer {
 				},
 			}
 			
-			if !action.is_inspection() {
+			if action.clears_popups() && !action.is_inspection() {
 				self.inspection_status = None;
 			}
 		}

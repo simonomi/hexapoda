@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="800"
+   height="800"
+   viewBox="0 0 800 800"
+   version="1.1"
+   id="svg9"
+   sodipodi:docname="bug shape.svg"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs9" />
+  <sodipodi:namedview
+     id="namedview9"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:zoom="0.28233547"
+     inkscape:cx="313.4569"
+     inkscape:cy="525.97005"
+     inkscape:window-width="1558"
+     inkscape:window-height="1186"
+     inkscape:window-x="51"
+     inkscape:window-y="30"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg9" />
+  <path
+     d="m 556.65091,660.71168 52.5,90.93266 -43.30127,25 -52.5,-90.93266 z"
+     style="fill:#808080;fill-opacity:1;stroke:none;stroke-width:5.04947;stroke-linecap:butt;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+     id="path1"
+     inkscape:label="bottom right leg" />
+  <path
+     d="m 645,443.25116 h 105 v 50 H 645 Z"
+     style="fill:#808080;fill-opacity:1;stroke:none;stroke-width:5.04947;stroke-linecap:butt;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+     id="path2"
+     inkscape:label="middle right leg" />
+  <path
+     style="fill:#808080;fill-opacity:1;stroke:none;stroke-width:5.04947;stroke-linecap:butt;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+     d="m 570.84895,281.10195 52.5,-90.93267 43.30127,25 -52.5,90.93267 z"
+     id="path3"
+     inkscape:label="top right leg" />
+  <path
+     style="fill:#808080;fill-opacity:1;stroke:none;stroke-width:5.04947;stroke-linecap:butt;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+     d="m 190.84968,751.64399 52.5,-90.93266 43.30127,25 -52.5,90.93266 z"
+     id="path10"
+     inkscape:label="bottom left leg" />
+  <path
+     d="m 50,443.25116 h 105 v 50 H 50 Z"
+     style="fill:#808080;fill-opacity:1;stroke:none;stroke-width:5.04947;stroke-linecap:butt;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+     id="path4"
+     inkscape:label="middle left leg" />
+  <path
+     d="m 185.84939,306.10183 -52.5,-90.93267 43.30127,-25 52.5,90.93267 z"
+     style="fill:#808080;fill-opacity:1;stroke:none;stroke-width:5.04947;stroke-linecap:butt;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+     id="path5"
+     inkscape:label="top left leg" />
+  <path
+     d="M 261.51951,259.5272 149.99998,323.91436 V 612.59109 L 375.00037,742.49598 V 344.48116 H 310.5664 Z m 276.96147,0 -49.04616,84.95396 H 425.00086 V 742.49598 L 650.00197,612.59109 V 323.91436 Z"
+     style="display:inline;fill:#808080;fill-opacity:1;stroke:none;stroke-width:18.2822;stroke-dasharray:none;stroke-opacity:1"
+     id="path6"
+     inkscape:label="body" />
+  <path
+     d="M 475.00017,59.672943 550.0009,189.57692 475.00017,319.48089 H 324.99973 L 250.00102,189.57692 325.00074,59.672943 Z"
+     style="display:inline;fill:#808080;fill-opacity:1;stroke:none;stroke-width:50.0001;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+     id="path7"
+     inkscape:label="head" />
+  <path
+     d="m 439.59927,70.987052 27.5,-47.631397 43.30127,25 -27.5,47.631397 z"
+     style="fill:#808080;fill-opacity:1;stroke:none;stroke-width:3.65454;stroke-linecap:butt;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+     id="path8"
+     inkscape:label="right antenna" />
+  <path
+     d="m 332.90131,23.356007 27.5,47.631397 -43.30127,25 -27.5,-47.631397 z"
+     style="fill:#808080;fill-opacity:1;stroke:none;stroke-width:3.65454;stroke-linecap:butt;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+     id="path9"
+     inkscape:label="left antenna" />
+</svg>

@@ -34,6 +34,7 @@ const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 // - write docs
 //   - simonomi.dev/hexapoda?
 //   - config
+//     - schema!!
 //   - uhhhhh?
 // - inspector translations for varint
 // - search

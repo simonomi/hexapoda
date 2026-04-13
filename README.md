@@ -1,4 +1,4 @@
-# hexapoda
+# <img height=40 align=top src="https://github.com/simonomi/hexapoda/blob/main/icon/bug%20colored%20large.png?raw=true"> hexapoda
 
 a colorful modal hex editor
 

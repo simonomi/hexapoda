@@ -180,9 +180,13 @@ pub enum BufferAction {
 	AlignViewBottom,
 	AlignViewTop,
 	
-	ExtendToMark,
-	ExtendToNull,
-	ExtendToFF,
+	FindTillMark,
+	FindTillNull,
+	FindTillFF,
+	
+	ExtendTillMark,
+	ExtendTillNull,
+	ExtendTillFF,
 	
 	InspectSelection,
 	InspectSelectionColor,
@@ -250,9 +254,13 @@ impl BufferAction {
 			AlignViewBottom => false,
 			AlignViewTop => false,
 			
-			ExtendToMark => true,
-			ExtendToNull => true,
-			ExtendToFF => true,
+			FindTillMark => true,
+			FindTillNull => true,
+			FindTillFF => true,
+			
+			ExtendTillMark => true,
+			ExtendTillNull => true,
+			ExtendTillFF => true,
 			
 			InspectSelection => true,
 			InspectSelectionColor => true,
@@ -321,9 +329,13 @@ impl From<BufferAction> for &str {
 			AlignViewBottom => "align_view_bottom",
 			AlignViewTop => "align_view_top",
 			
-			ExtendToMark => "extend_to_mark",
-			ExtendToNull => "extend_to_null",
-			ExtendToFF => "extend_to_ff",
+			FindTillMark => "find_till_mark",
+			FindTillNull => "find_till_null",
+			FindTillFF => "find_till_ff",
+			
+			ExtendTillMark => "extend_till_mark",
+			ExtendTillNull => "extend_till_null",
+			ExtendTillFF => "extend_till_ff",
 			
 			InspectSelection => "inspect_selection",
 			InspectSelectionColor => "inspect_selection_color",
@@ -400,9 +412,9 @@ impl TryFrom<&str> for BufferAction {
 			"align_view_bottom" => Ok(AlignViewBottom),
 			"align_view_top" => Ok(AlignViewTop),
 			
-			"extend_to_mark" => Ok(ExtendToMark),
-			"extend_to_null" => Ok(ExtendToNull),
-			"extend_to_ff" => Ok(ExtendToFF),
+			"find_till_mark" => Ok(FindTillMark),
+			"find_till_null" => Ok(FindTillNull),
+			"find_till_ff" => Ok(FindTillFF),
 			
 			"inspect_selection" => Ok(InspectSelection),
 			"inspect_selection_color" => Ok(InspectSelectionColor),

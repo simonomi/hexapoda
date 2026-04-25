@@ -28,7 +28,7 @@ impl PartialAction {
 			Replace => "r",
 			Space => "␠",
 			Repeat => "×",
-			To => "t",
+			Till => "t",
 		}
 	}
 }

@@ -49,7 +49,7 @@ pub enum Mode {
 #[derive(Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum PartialAction {
-	Goto, View, Replace, Space, Repeat, To
+	Goto, View, Replace, Space, Repeat, Till
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -69,7 +69,7 @@ impl TryFrom<&str> for PartialAction {
 			"replace" => Ok(Replace),
 			"space" => Ok(Space),
 			"repeat" => Ok(Repeat),
-			"to" => Ok(To),
+			"to" => Ok(Till),
 			_ => Err(()),
 		}
 	}

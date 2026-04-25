@@ -43,7 +43,6 @@ const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 // - update showcase
 // - fix scroll clamping
 // - inspector translations for varint
-// - t in select mode doesnt work right
 // - repeat in select mode doesnt work right
 // - gg/G in select mode
 // - gl/gj in select mode

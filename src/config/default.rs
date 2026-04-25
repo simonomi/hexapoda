@@ -138,10 +138,10 @@ impl Default for Config {
 					
 					(keypress("C"), CopySelectionOnNextLine.into()),
 				].into()),
-				(Some(PartialAction::To), [
-					(keypress("m"), ExtendToMark.into()),
-					(keypress("0"), ExtendToNull.into()),
-					(keypress("f"), ExtendToFF.into()),
+				(Some(PartialAction::Till), [
+					(keypress("m"), FindTillMark.into()),
+					(keypress("0"), FindTillNull.into()),
+					(keypress("f"), FindTillFF.into()),
 				].into()),
 			].into()),
 			(Mode::Select, [
@@ -259,10 +259,10 @@ impl Default for Config {
 					
 					(keypress("C"), CopySelectionOnNextLine.into()),
 				].into()),
-				(Some(PartialAction::To), [
-					(keypress("m"), ExtendToMark.into()),
-					(keypress("0"), ExtendToNull.into()),
-					(keypress("f"), ExtendToFF.into()),
+				(Some(PartialAction::Till), [
+					(keypress("m"), ExtendTillMark.into()),
+					(keypress("0"), ExtendTillNull.into()),
+					(keypress("f"), ExtendTillFF.into()),
 				].into()),
 			].into())
 		].into()

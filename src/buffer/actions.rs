@@ -62,9 +62,13 @@ impl Buffer {
 			BufferAction::AlignViewBottom => self.align_view_bottom(window_size),
 			BufferAction::AlignViewTop => self.align_view_top(),
 			
-			BufferAction::ExtendToMark => self.extend_to_mark(window_size),
-			BufferAction::ExtendToNull => self.extend_to_null(window_size),
-			BufferAction::ExtendToFF => self.extend_to_FF(window_size),
+			BufferAction::FindTillMark => self.till_mark(false, window_size), // extend: false
+			BufferAction::FindTillNull => self.till_null(false, window_size), // extend: false
+			BufferAction::FindTillFF => self.till_FF(false, window_size), // extend: false
+			
+			BufferAction::ExtendTillMark => self.till_mark(true, window_size), // extend: true
+			BufferAction::ExtendTillNull => self.till_null(true, window_size), // extend: true
+			BufferAction::ExtendTillFF => self.till_FF(true, window_size), // extend: true
 			
 			BufferAction::InspectSelection => self.inspect_selection(),
 			BufferAction::InspectSelectionColor => self.inspect_selection_color(),
@@ -102,7 +106,7 @@ impl Buffer {
 	}
 	
 	const fn to(&mut self) {
-		self.partial_action = Some(PartialAction::To);
+		self.partial_action = Some(PartialAction::Till);
 	}
 	
 	pub fn scroll_down(&mut self, window_size: WindowSize) {
@@ -557,7 +561,7 @@ impl Buffer {
 			.saturating_sub(BYTES_OF_PADDING);
 	}
 	
-	fn extend_to_mark(&mut self, window_size: WindowSize) {
+	fn till_mark(&mut self, extend: bool, window_size: WindowSize) {
 		let mut sorted_marks: Vec<_> = self.marks.iter().copied().collect();
 		sorted_marks.sort_unstable();
 		
@@ -569,7 +573,9 @@ impl Buffer {
 			max_contents_index
 		);
 		
-		self.primary_cursor.tail = self.primary_cursor.head;
+		if !extend {
+			self.primary_cursor.tail = self.primary_cursor.head;
+		}
 		self.primary_cursor.head = mark_after_primary - 1;
 		
 		for cursor in &mut self.cursors {
@@ -579,7 +585,9 @@ impl Buffer {
 				max_contents_index
 			);
 			
-			cursor.tail = cursor.head;
+			if !extend {
+				cursor.tail = cursor.head;
+			}
 			cursor.head = mark_after_cursor - 1;
 		}
 		
@@ -587,13 +595,15 @@ impl Buffer {
 		self.clamp_screen_to_primary_cursor(window_size);
 	}
 	
-	fn extend_to_null(&mut self, window_size: WindowSize) {
+	fn till_null(&mut self, extend: bool, window_size: WindowSize) {
 		if let Some(null_offset_after_primary) = self.contents[self.primary_cursor.head..]
 			.iter()
 			.skip(1)
 			.position(|&byte| byte == 0)
 		{
-			self.primary_cursor.tail = self.primary_cursor.head;
+			if !extend {
+				self.primary_cursor.tail = self.primary_cursor.head;
+			}
 			self.primary_cursor.head += null_offset_after_primary;
 		}
 		
@@ -603,7 +613,9 @@ impl Buffer {
 				.skip(1)
 				.position(|&byte| byte == 0)
 			{
-				cursor.tail = cursor.head;
+				if !extend {
+					cursor.tail = cursor.head;
+				}
 				cursor.head += null_offset_after_primary;
 			}
 		}
@@ -613,13 +625,15 @@ impl Buffer {
 	}
 	
 	#[allow(non_snake_case)]
-	fn extend_to_FF(&mut self, window_size: WindowSize) {
+	fn till_FF(&mut self, extend: bool, window_size: WindowSize) {
 		if let Some(null_offset_after_primary) = self.contents[self.primary_cursor.head..]
 			.iter()
 			.skip(1)
 			.position(|&byte| byte == 0xFF)
 		{
-			self.primary_cursor.tail = self.primary_cursor.head;
+			if !extend {
+				self.primary_cursor.tail = self.primary_cursor.head;
+			}
 			self.primary_cursor.head += null_offset_after_primary;
 		}
 		
@@ -629,7 +643,9 @@ impl Buffer {
 				.skip(1)
 				.position(|&byte| byte == 0xFF)
 			{
-				cursor.tail = cursor.head;
+				if !extend {
+					cursor.tail = cursor.head;
+				}
 				cursor.head += null_offset_after_primary;
 			}
 		}

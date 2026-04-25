@@ -42,7 +42,7 @@ pub struct Buffer {
 #[derive(Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum Mode {
-	Normal, Select, Insert
+	Normal, Select, // Insert
 }
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
@@ -69,7 +69,7 @@ impl TryFrom<&str> for PartialAction {
 			"replace" => Ok(Replace),
 			"space" => Ok(Space),
 			"repeat" => Ok(Repeat),
-			"to" => Ok(Till),
+			"till" => Ok(Till),
 			_ => Err(()),
 		}
 	}

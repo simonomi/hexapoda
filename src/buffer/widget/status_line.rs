@@ -40,7 +40,7 @@ impl Mode {
 		match self {
 			Self::Normal => " NORMAL ",
 			Self::Select => " SELECT ",
-			Self::Insert => " INSERT ",
+			// Self::Insert => " INSERT ",
 		}
 	}
 	
@@ -48,7 +48,7 @@ impl Mode {
 		match self {
 			Self::Normal => Color::Blue,
 			Self::Select => Color::Yellow,
-			Self::Insert => Color::Green,
+			// Self::Insert => Color::Green,
 		}
 	}
 }

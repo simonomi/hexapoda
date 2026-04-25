@@ -106,6 +106,9 @@ impl Default for Config {
 				].into()),
 				(Some(PartialAction::Space), [
 					(keypress("w"), Save.into()),
+					
+					(keypress("q"), QuitIfSaved.into()),
+					(keypress("Q"), Quit.into()),
 				].into()),
 				(Some(PartialAction::Repeat), [
 					(keypress("i"), MoveByteUp.into()),
@@ -235,6 +238,9 @@ impl Default for Config {
 				].into()),
 				(Some(PartialAction::Space), [
 					(keypress("w"), Save.into()),
+					
+					(keypress("q"), QuitIfSaved.into()),
+					(keypress("Q"), Quit.into()),
 				].into()),
 				(Some(PartialAction::Repeat), [
 					(keypress("i"), ExtendByteUp.into()),

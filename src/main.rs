@@ -45,17 +45,18 @@ const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 // - inspector translations for varint
 // - repeated actions may only be cursor actions
 //   - shouldn't crash
-// - gg/G in select mode
-// - gl/gj in select mode
 // - scrolling in select mode
-// - +/- to edit selected bytes by amount
+// - M mark at selected offset (like Jm)
 // - search
 //   - ascii and bytes (`/` and `A-/`?)
 // - diffing
 //   - doesn't have to be anything fancy, just compare each byte 1:1
 // - s/A-k/A-K
-//   - sm select marks
+//   - (not) sm select marks
 // - C-a/C-x
+// - +/- to edit selected bytes by amount ?
+//   - operate on entire selection (u16/u32/etc)
+//   - hex or decimal ?
 // - modifications
 //   - insert/append
 //     - mode
@@ -65,8 +66,8 @@ const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 //   - change
 // - edit character panel
 //   - modifier on existing keys like teehee? or jump to panel?
+//     - A-r replaces with ASCII ?
 //     - if jump to panel, space?
-// - visual gg/G
 // - jumplist
 // - p
 // - [/] to cycle view offset?

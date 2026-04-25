@@ -163,6 +163,8 @@ impl Default for Config {
 					(keypress("j"), ExtendByteLeft.into()),
 					(keypress("l"), ExtendByteRight.into()),
 					
+					(keypress("G"), ExtendFileEnd.into()),
+					
 					(keypress("up"), ExtendByteUp.into()),
 					(keypress("down"), ExtendByteDown.into()),
 					(keypress("left"), ExtendByteLeft.into()),
@@ -219,6 +221,12 @@ impl Default for Config {
 					
 					(keypress("C- "), InspectSelection.into()),
 					(keypress("A- "), InspectSelectionColor.into()),
+				].into()),
+				(Some(PartialAction::Goto), [
+					(keypress("j"), ExtendLineStart.into()),
+					(keypress("l"), ExtendLineEnd.into()),
+					
+					(keypress("g"), ExtendFileStart.into()),
 				].into()),
 				(Some(PartialAction::View), [
 					(keypress("z"), AlignViewCenter.into()),

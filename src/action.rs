@@ -416,6 +416,10 @@ impl TryFrom<&str> for BufferAction {
 			"find_till_null" => Ok(FindTillNull),
 			"find_till_ff" => Ok(FindTillFF),
 			
+			"extend_till_mark" => Ok(ExtendTillMark),
+			"extend_till_null" => Ok(ExtendTillNull),
+			"extend_till_ff" => Ok(ExtendTillFF),
+			
 			"inspect_selection" => Ok(InspectSelection),
 			"inspect_selection_color" => Ok(InspectSelectionColor),
 			
@@ -442,6 +446,11 @@ pub enum CursorAction {
 	GotoLineEnd,
 	GotoFileStart,
 	GotoFileEnd,
+	
+	ExtendLineStart,
+	ExtendLineEnd,
+	ExtendFileStart,
+	ExtendFileEnd,
 	
 	MoveNextWordStart,
 	MoveNextWordEnd,
@@ -476,6 +485,11 @@ impl CursorAction {
 			GotoFileStart => true,
 			GotoFileEnd => true,
 			
+			ExtendLineStart => true,
+			ExtendLineEnd => true,
+			ExtendFileStart => true,
+			ExtendFileEnd => true,
+			
 			MoveNextWordStart => true,
 			MoveNextWordEnd => true,
 			MovePreviousWordStart => true,
@@ -509,6 +523,11 @@ impl From<CursorAction> for &str {
 			GotoLineEnd => "goto_line_end",
 			GotoFileStart => "goto_file_start",
 			GotoFileEnd => "goto_file_end",
+			
+			ExtendLineStart => "extend_line_start",
+			ExtendLineEnd => "extend_line_end",
+			ExtendFileStart => "extend_file_start",
+			ExtendFileEnd => "extend_file_end",
 			
 			MoveNextWordStart => "move_next_word_start",
 			MoveNextWordEnd => "move_next_word_end",
@@ -551,6 +570,11 @@ impl TryFrom<&str> for CursorAction {
 			"goto_line_end" => Ok(GotoLineEnd),
 			"goto_file_start" => Ok(GotoFileStart),
 			"goto_file_end" => Ok(GotoFileEnd),
+			
+			"extend_line_start" => Ok(ExtendLineStart),
+			"extend_line_end" => Ok(ExtendLineEnd),
+			"extend_file_start" => Ok(ExtendFileStart),
+			"extend_file_end" => Ok(ExtendFileEnd),
 			
 			"move_next_word_start" => Ok(MoveNextWordStart),
 			"move_next_word_end" => Ok(MoveNextWordEnd),

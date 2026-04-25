@@ -23,6 +23,11 @@ impl Cursor {
 			CursorAction::GotoFileStart => self.goto_file_start(),
 			CursorAction::GotoFileEnd => self.goto_file_end(max_contents_index),
 			
+			CursorAction::ExtendLineStart => self.extend_line_start(),
+			CursorAction::ExtendLineEnd => self.extend_line_end(max_contents_index),
+			CursorAction::ExtendFileStart => self.extend_file_start(),
+			CursorAction::ExtendFileEnd => self.extend_file_end(max_contents_index),
+			
 			CursorAction::MoveNextWordStart => self.move_next_word_start(max_contents_index),
 			CursorAction::MoveNextWordEnd => self.move_next_word_end(max_contents_index),
 			CursorAction::MovePreviousWordStart => self.move_previous_word_start(),
@@ -89,27 +94,43 @@ impl Cursor {
 	}
 	
 	pub const fn goto_line_start(&mut self) {
-		self.head -= self.head % BYTES_PER_LINE;
+		self.extend_line_start();
 		self.collapse();
 	}
 	
 	pub fn goto_line_end(&mut self, max: usize) {
-		self.head = min(
-			self.head + BYTES_PER_LINE - 1 - (self.head % BYTES_PER_LINE),
-			max
-		);
+		self.extend_line_end(max);
 		self.collapse();
 	}
 	
 	pub const fn goto_file_start(&mut self) {
-		self.head %= BYTES_PER_LINE;
+		self.extend_file_start();
 		self.collapse();
 	}
 	
 	pub const fn goto_file_end(&mut self, max: usize) {
+		self.extend_file_end(max);
+		self.collapse();
+	}
+	
+	pub const fn extend_line_start(&mut self) {
+		self.head -= self.head % BYTES_PER_LINE;
+	}
+	
+	pub fn extend_line_end(&mut self, max: usize) {
+		self.head = min(
+			self.head + BYTES_PER_LINE - 1 - (self.head % BYTES_PER_LINE),
+			max
+		);
+	}
+	
+	pub const fn extend_file_start(&mut self) {
+		self.head %= BYTES_PER_LINE;
+	}
+	
+	pub const fn extend_file_end(&mut self, max: usize) {
 		self.head += previous_multiple_of(BYTES_PER_LINE, max + 1 - self.head);
 		
-		self.collapse();
 	}
 	
 	pub fn move_next_word_start(&mut self, max: usize) {

@@ -378,6 +378,7 @@ impl Buffer {
 		if next_cursor_index == self.cursors.len() {
 			swap(&mut self.primary_cursor, &mut self.cursors[0]);
 			
+			// TODO: is a full sort necessary ?
 			self.cursors.sort_by_key(|cursor| cursor.head);
 		} else {
 			swap(&mut self.primary_cursor, &mut self.cursors[next_cursor_index]);
@@ -704,6 +705,15 @@ fn inspect(selection: &[u8]) -> Vec<Span<'static>> {
 	
 	let int = nat.and_then(|nat| nat_to_int_if_different(nat, selection.len()));
 	
+	let binary = nat
+		.filter(|_| selection.len() == 1)
+		.map(|nat| {
+			let lower_bits = nat & 0b1111;
+			let upper_bits = nat >> 4;
+			
+			format!("{upper_bits:04b}_{lower_bits:04b}").into()
+		});
+	
 	let utf8 = str::from_utf8(selection).ok()
 		.filter(|_| selection.len() != 1)
 		.map(|utf8| utf8.trim_suffix('\0'))
@@ -801,6 +811,7 @@ fn inspect(selection: &[u8]) -> Vec<Span<'static>> {
 	int.map(|int| format!("{int}").into())
 		.into_iter()
 		.chain(nat.map(|nat| format!("{nat}").into()))
+		.chain(binary)
 		.chain(utf8)
 		.chain(fixedpoint2012_signed)
 		.chain(fixedpoint2012)

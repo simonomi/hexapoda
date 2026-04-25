@@ -105,6 +105,7 @@ impl Buffer {
 		address: usize,
 		byte: u8
 	) -> Span<'static> {
+		// TODO: checking this with lots of selections is slow
 		if self.partial_action == Some(PartialAction::Replace) &&
 		   iter::once(&self.primary_cursor)
 			.chain(&self.cursors)

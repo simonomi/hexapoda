@@ -45,7 +45,7 @@ impl Config {
 	#[cfg(windows)]
 	fn default_path() -> Option<PathBuf> {
 		// this isn't technically the right way but it should be good enough
-		home_dir().map(|home| home.join("AppData").join("Roaming"))
+		home_dir().map(|home| home.join("AppData").join("Roaming").join("hexapoda.toml"))
 	}
 	
 	pub fn path(override_path: Option<PathBuf>) -> Option<PathBuf> {
@@ -58,7 +58,21 @@ impl Config {
 		
 		let raw_config = read_to_string(path)?;
 		
-		Ok(toml::from_str(&raw_config)?)
+		Ok(Self::default().combined_with(toml::from_str(&raw_config)?))
+	}
+	
+	fn combined_with(mut self, other: Self) -> Self {
+		for (mode, mode_config) in other.0 {
+			match self.0.entry(mode) {
+				Entry::Occupied(mut occupied_entry) => {
+					occupied_entry.get_mut().combine_with(mode_config);
+				}
+				Entry::Vacant(vacant_entry) => {
+					vacant_entry.insert(mode_config);
+				}
+			}
+		}
+		self
 	}
 }
 
@@ -75,6 +89,27 @@ impl From<io::Error> for ConfigInitError {
 impl From<toml::de::Error> for ConfigInitError {
 	fn from(error: toml::de::Error) -> Self {
 		Self::Deserialization(error)
+	}
+}
+
+impl ModeConfig {
+	fn combine_with(&mut self, other: Self) {
+		for (partial_action, keybinds) in other.0 {
+			match self.0.entry(partial_action) {
+				Entry::Occupied(mut occupied_entry) => {
+					occupied_entry.get_mut().combine_with(keybinds);
+				}
+				Entry::Vacant(vacant_entry) => {
+					vacant_entry.insert(keybinds);
+				}
+			}
+		}
+	}
+}
+
+impl Keybinds {
+	fn combine_with(&mut self, other: Self) {
+		self.0.extend(other.0);
 	}
 }
 

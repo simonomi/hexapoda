@@ -73,10 +73,6 @@ const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 // - [/] to cycle view offset?
 // - gj jump to entered offset
 
-// future directions
-// - 'views' for bytes (i8/16/etc u8/16/etc 20.12/8.4/etc)
-//   - how to fit??! `-128` longer than `80`
-
 fn main() {
 	let arguments = Arguments::parse();
 	

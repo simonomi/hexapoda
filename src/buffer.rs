@@ -282,7 +282,11 @@ impl Buffer {
 					self.combine_cursors_if_overlapping();
 					self.clamp_screen_to_primary_cursor(window_size);
 				},
-				_ => panic!("repeated actions may only be cursor actions"),
+				_ => {
+					self.alert_message = Span::from(
+						"only cursor actions may be repeated"
+					).red();
+				}
 			}
 		}
 	}

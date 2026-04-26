@@ -34,7 +34,7 @@ impl App {
 	}
 	
 	pub fn yank(&mut self) {
-		let current_buffer = &self.buffers[self.current_buffer_index];
+		let current_buffer = &mut self.buffers[self.current_buffer_index];
 		
 		self.primary_cursor_register = current_buffer
 			.contents[current_buffer.primary_cursor.range()]
@@ -46,5 +46,11 @@ impl App {
 				current_buffer.contents[cursor.range()].to_vec()
 			})
 			.collect();
+		
+		current_buffer.alert_message = if current_buffer.cursors.is_empty() {
+			"yanked 1 selection".into()
+		} else {
+			format!("yanked {} selections", current_buffer.cursors.len() + 1).into()
+		};
 	}
 }

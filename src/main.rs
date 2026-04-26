@@ -35,24 +35,21 @@ const LINES_OF_PADDING: usize = 5;
 const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 
 // TODO:
-// - write docs
-//   - simonomi.dev/hexapoda?
-//   - config
-//     - schema!!
-//   - uhhhhh?
-// - update showcase
 // - fix scroll clamping
-// - inspector translations for varint
-// - repeated actions may only be cursor actions
-//   - shouldn't crash
-// - scrolling in select mode
-// - M mark at selected offset (like Jm)
+// - fix scrolling in select mode
+//   - shouldn't clamp tail
+// - `go` goto entered offset
 // - search
-//   - ascii and bytes (`/` and `A-/`?)
+//   - `/` hex, `A-/` ascii
+//   - if non-hex-digit typed, search ascii
+// - update showcase
+// - inspector translations for varint
+// - M mark at selected offset (like Jm)
 // - diffing
 //   - doesn't have to be anything fancy, just compare each byte 1:1
+//   - sync scroll ? sync selections ??
 // - s/A-k/A-K
-//   - (not) sm select marks
+//   - sm select marks
 // - C-a/C-x
 // - +/- to edit selected bytes by amount ?
 //   - operate on entire selection (u16/u32/etc)
@@ -71,7 +68,6 @@ const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 // - jumplist
 // - p
 // - [/] to cycle view offset?
-// - gj jump to entered offset
 
 fn main() {
 	let arguments = Arguments::parse();

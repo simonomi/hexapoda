@@ -1,5 +1,5 @@
 use std::{cmp::min, mem::swap};
-use crate::{BYTES_PER_LINE, action::CursorAction, cursor::Cursor};
+use crate::{BYTES_PER_LINE, action::CursorAction, cursor::Cursor, utilities::{Floorable, SaturatingSubtract}};
 
 impl Cursor {
 	pub fn execute(
@@ -114,12 +114,12 @@ impl Cursor {
 	}
 	
 	pub const fn extend_line_start(&mut self) {
-		self.head -= self.head % BYTES_PER_LINE;
+		self.head.floor_to_the_nearest(BYTES_PER_LINE);
 	}
 	
 	pub fn extend_line_end(&mut self, max: usize) {
 		self.head = min(
-			self.head + BYTES_PER_LINE - 1 - (self.head % BYTES_PER_LINE),
+			self.head.floored_to_the_nearest(BYTES_PER_LINE) + BYTES_PER_LINE - 1,
 			max
 		);
 	}
@@ -164,7 +164,7 @@ impl Cursor {
 			self.tail = self.head - 1;
 			self.head -= 4;
 		} else {
-			self.head -= self.head % 4;
+			self.head.floor_to_the_nearest(4);
 		}
 	}
 	
@@ -194,7 +194,7 @@ impl Cursor {
 		if self.head.is_multiple_of(4) { // at the beginning of a word
 			self.head -= 4;
 		} else {
-			self.head -= self.head % 4;
+			self.head.floor_to_the_nearest(4);
 		}
 	}
 	
@@ -208,9 +208,9 @@ impl Cursor {
 		{
 			self.head = min(self.head + BYTES_PER_LINE, max);
 		} else {
-			self.tail -= self.tail % BYTES_PER_LINE;
+			self.tail.floor_to_the_nearest(BYTES_PER_LINE);
 			self.head = min(
-				self.head + BYTES_PER_LINE - 1 - (self.head % BYTES_PER_LINE),
+				self.head.floored_to_the_nearest(BYTES_PER_LINE) + BYTES_PER_LINE - 1,
 				max
 			);
 		}
@@ -225,11 +225,11 @@ impl Cursor {
 		   (self.tail % BYTES_PER_LINE == BYTES_PER_LINE - 1 ||
 		    self.tail == max)
 		{
-			self.head = self.head.saturating_sub(BYTES_PER_LINE);
+			self.head.saturating_subtract(BYTES_PER_LINE);
 		} else {
-			self.head -= self.head % BYTES_PER_LINE;
+			self.head.floor_to_the_nearest(BYTES_PER_LINE);
 			self.tail = min(
-				self.tail + BYTES_PER_LINE - 1 - (self.tail % BYTES_PER_LINE),
+				self.tail.floored_to_the_nearest(BYTES_PER_LINE) + BYTES_PER_LINE - 1,
 				max
 			);
 		}
@@ -237,11 +237,7 @@ impl Cursor {
 }
 
 const fn previous_multiple_of(multiple: usize, number: usize) -> usize {
-	if number == 0 {
-		0
-	} else {
-		(number - 1) - ((number - 1) % multiple)
-	}
+	number.saturating_sub(1).floored_to_the_nearest(multiple)
 }
 
 mod tests {

@@ -59,12 +59,9 @@ impl Cursor {
 		swap(&mut self.head, &mut self.tail);
 	}
 	
-	// TODO: in visual mode, should only clamp head
-	pub fn clamp(&mut self, scroll_position: usize, screen_size: usize) {
-		let max_row = scroll_position + screen_size - 1;
-		
-		self.head = self.head.clamp(scroll_position, max_row);
-		self.tail = self.tail.clamp(scroll_position, max_row);
+	pub fn clamp(&mut self, min: usize, max: usize) {
+		self.head = self.head.clamp(min, max);
+		self.tail = self.tail.clamp(min, max);
 	}
 	
 	pub fn combine_with(&mut self, other: Self) {

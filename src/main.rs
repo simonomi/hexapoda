@@ -5,6 +5,7 @@
 #![feature(exact_bitshifts)]
 #![feature(hash_set_entry)]
 #![feature(trim_prefix_suffix)]
+#![feature(const_trait_impl)]
 
 use arguments::Arguments;
 use clap::Parser;
@@ -33,9 +34,6 @@ const LINES_OF_PADDING: usize = 5;
 const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 
 // TODO:
-// - fix scroll clamping
-// - fix scrolling in select mode
-//   - shouldn't clamp tail
 // - `go` goto entered offset
 // - search
 //   - `/` hex, `A-/` ascii

@@ -144,9 +144,11 @@ impl Buffer {
 		};
 		
 		assert!(self.scroll_position.is_multiple_of(BYTES_PER_LINE));
-		assert!(self.scroll_position < self.contents.len());
-		assert!(self.primary_cursor.head < self.contents.len());
-		assert!(self.primary_cursor.tail < self.contents.len());
+		if !self.contents.is_empty() {
+			assert!(self.scroll_position < self.contents.len());
+			assert!(self.primary_cursor.head < self.contents.len());
+			assert!(self.primary_cursor.tail < self.contents.len());
+		}
 		assert!(self.scroll_position <= self.primary_cursor.head);
 		assert!(self.primary_cursor.head < self.scroll_position + window_size.visible_byte_count());
 		

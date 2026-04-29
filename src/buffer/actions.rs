@@ -1,7 +1,7 @@
 use std::{cmp::min, collections::hash_set::Entry, convert::identity, fs::File, io::Write, iter, mem::{replace, swap}};
 use itertools::Itertools;
 use ratatui::{style::{Color, Stylize}, text::Span};
-use crate::{BYTES_OF_PADDING, BYTES_PER_LINE, LINES_OF_PADDING, action::BufferAction, buffer::{Buffer, InspectionStatus, Mode, PartialAction}, cursor::Cursor, edit_action::EditAction, popup::Popup, window_size::WindowSize};
+use crate::{BYTES_OF_PADDING, BYTES_PER_LINE, LINES_OF_PADDING, action::BufferAction, buffer::{Buffer, InspectionStatus, Mode, PartialAction}, cursor::Cursor, edit_action::EditAction, popup::Popup, utilities::{Floorable, SaturatingSubtract}, window_size::WindowSize};
 
 impl Buffer {
 	pub fn execute(&mut self, action: BufferAction, window_size: WindowSize) {
@@ -60,7 +60,7 @@ impl Buffer {
 			
 			BufferAction::AlignViewCenter => self.align_view_center(window_size),
 			BufferAction::AlignViewBottom => self.align_view_bottom(window_size),
-			BufferAction::AlignViewTop => self.align_view_top(),
+			BufferAction::AlignViewTop => self.align_view_top(window_size),
 			
 			BufferAction::FindTillMark => self.till_mark(false, window_size), // extend: false
 			BufferAction::FindTillNull => self.till_null(false, window_size), // extend: false
@@ -110,131 +110,75 @@ impl Buffer {
 	}
 	
 	pub fn scroll_down(&mut self, window_size: WindowSize) {
-		if self.contents.len() <= BYTES_OF_PADDING { return; }
-		
-		self.scroll_position = min(
-			self.scroll_position + BYTES_PER_LINE,
-			self.contents.len() - BYTES_OF_PADDING - self.contents.len() % BYTES_PER_LINE
-		);
-		
-		if window_size.hex_rows() > LINES_OF_PADDING * 2 {
-			self.primary_cursor.clamp(
-				self.scroll_position + BYTES_OF_PADDING,
-				window_size.visible_byte_count() - BYTES_OF_PADDING * 2
-			);
-		} else {
-			self.primary_cursor.clamp(self.scroll_position, window_size.visible_byte_count());
-		}
-		
+		self.scroll_position += BYTES_PER_LINE;
+		self.clamp_screen_to_contents(window_size);
+		self.clamp_primary_cursor_to_screen(window_size);
 		self.combine_cursors_if_overlapping();
 	}
 	
 	pub fn scroll_up(&mut self, window_size: WindowSize) {
-		self.scroll_position = self.scroll_position.saturating_sub(BYTES_PER_LINE);
-		
-		if window_size.hex_rows() > LINES_OF_PADDING * 2 {
-			self.primary_cursor.clamp(
-				self.scroll_position + BYTES_OF_PADDING,
-				window_size.visible_byte_count() - BYTES_OF_PADDING * 2
-			);
-		} else {
-			self.primary_cursor.clamp(self.scroll_position, window_size.visible_byte_count());
-		}
-		
+		self.scroll_position.saturating_subtract(BYTES_PER_LINE);
+		self.clamp_primary_cursor_to_screen(window_size);
 		self.combine_cursors_if_overlapping();
 	}
 	
 	fn page_cursor_half_down(&mut self, window_size: WindowSize) {
-		if self.contents.len() <= BYTES_OF_PADDING { return; }
+		let scroll_amount = (window_size.visible_byte_count() / 2).next_multiple_of(BYTES_PER_LINE);
 		
-		let old_scroll_position = self.scroll_position;
+		self.scroll_position += scroll_amount;
+		self.clamp_screen_to_contents(window_size);
 		
-		self.scroll_position = min(
-			self.scroll_position + (window_size.visible_byte_count() / 2).next_multiple_of(BYTES_PER_LINE),
-			self.contents.len() - BYTES_OF_PADDING - self.contents.len() % BYTES_PER_LINE
-		);
+		self.primary_cursor.head += scroll_amount;
+		if self.mode != Mode::Select {
+			self.primary_cursor.tail += scroll_amount;
+		}
+		self.primary_cursor.clamp(0, self.max_contents_index());
+		self.clamp_screen_to_primary_cursor(window_size);
 		
-		let scroll_position_change = self.scroll_position - old_scroll_position;
 		let max_contents_index = self.max_contents_index();
 		
-		self.primary_cursor.head = min(
-			self.primary_cursor.head + scroll_position_change,
-			max_contents_index
-		);
-		self.primary_cursor.tail = min(
-			self.primary_cursor.tail + scroll_position_change,
-			max_contents_index
-		);
-		
 		for cursor in &mut self.cursors {
-			cursor.head = (cursor.head + scroll_position_change).min(max_contents_index);
-			cursor.tail = (cursor.tail + scroll_position_change).min(max_contents_index);
+			cursor.head += scroll_amount;
+			if self.mode != Mode::Select {
+				cursor.tail += scroll_amount;
+			}
+			cursor.clamp(0, max_contents_index);
 		}
 		
 		self.combine_cursors_if_overlapping();
 	}
 	
 	fn page_cursor_half_up(&mut self, window_size: WindowSize) {
-		let old_scroll_position = self.scroll_position;
+		let scroll_amount = (window_size.visible_byte_count() / 2).next_multiple_of(BYTES_PER_LINE);
 		
-		self.scroll_position = self.scroll_position.saturating_sub(
-			(window_size.visible_byte_count() / 2).next_multiple_of(BYTES_PER_LINE)
-		);
+		self.scroll_position.saturating_subtract(scroll_amount);
 		
-		let scroll_position_change = old_scroll_position - self.scroll_position;
-		let max_contents_index = self.max_contents_index();
-		
-		self.primary_cursor.head = min(
-			self.primary_cursor.head - scroll_position_change,
-			max_contents_index
-		);
-		self.primary_cursor.tail = min(
-			self.primary_cursor.tail - scroll_position_change,
-			max_contents_index
-		);
+		self.primary_cursor.head.saturating_subtract(scroll_amount);
+		if self.mode != Mode::Select {
+			self.primary_cursor.tail.saturating_subtract(scroll_amount);
+		}
 		
 		for cursor in &mut self.cursors {
-			cursor.head = (cursor.head - scroll_position_change).min(max_contents_index);
-			cursor.tail = (cursor.tail - scroll_position_change).min(max_contents_index);
+			cursor.head.saturating_subtract(scroll_amount);
+			if self.mode != Mode::Select {
+				cursor.tail.saturating_subtract(scroll_amount);
+			}
 		}
 		
 		self.combine_cursors_if_overlapping();
 	}
 	
 	fn page_down(&mut self, window_size: WindowSize) {
-		if self.contents.len() <= BYTES_OF_PADDING { return; }
-		
-		self.scroll_position = min(
-			self.scroll_position + window_size.visible_byte_count(),
-			self.max_contents_index() - BYTES_OF_PADDING - self.max_contents_index() % BYTES_PER_LINE
-		);
-		
-		if window_size.hex_rows() > LINES_OF_PADDING * 2 {
-			self.primary_cursor.clamp(
-				self.scroll_position + BYTES_OF_PADDING,
-				window_size.visible_byte_count() - BYTES_OF_PADDING * 2
-			);
-		} else {
-			self.primary_cursor.clamp(self.scroll_position, window_size.visible_byte_count());
-		}
-		
+		self.scroll_position += window_size.visible_byte_count();
+		self.clamp_screen_to_contents(window_size);
+		self.clamp_primary_cursor_to_screen(window_size);
 		self.combine_cursors_if_overlapping();
 	}
 	
 	fn page_up(&mut self, window_size: WindowSize) {
-		self.scroll_position = self.scroll_position.saturating_sub(
-			window_size.visible_byte_count()
-		);
-		
-		if window_size.hex_rows() > LINES_OF_PADDING * 2 {
-			self.primary_cursor.clamp(
-				self.scroll_position + BYTES_OF_PADDING,
-				window_size.visible_byte_count() - BYTES_OF_PADDING * 2
-			);
-		} else {
-			self.primary_cursor.clamp(self.scroll_position, window_size.visible_byte_count());
-		}
-		
+		self.scroll_position.saturating_subtract(window_size.visible_byte_count());
+		self.clamp_screen_to_contents(window_size);
+		self.clamp_primary_cursor_to_screen(window_size);
 		self.combine_cursors_if_overlapping();
 	}
 	
@@ -540,25 +484,25 @@ impl Buffer {
 		let half_a_screen = window_size.visible_byte_count() / 2;
 		
 		self.scroll_position = self.primary_cursor.head
-			.saturating_sub(self.primary_cursor.head % BYTES_PER_LINE)
-			.saturating_sub(half_a_screen - (half_a_screen % BYTES_PER_LINE));
+			.floored_to_the_nearest(BYTES_PER_LINE)
+			.saturating_sub(half_a_screen.floored_to_the_nearest(BYTES_PER_LINE));
 	}
 	
 	fn align_view_bottom(&mut self, window_size: WindowSize) {
 		self.scroll_position = self.primary_cursor.head
-			.saturating_sub(self.primary_cursor.head % BYTES_PER_LINE)
+			.floored_to_the_nearest(BYTES_PER_LINE)
 			.saturating_sub(
 				window_size
 					.visible_byte_count()
-					.saturating_sub(BYTES_PER_LINE + BYTES_OF_PADDING)
+					.saturating_sub(BYTES_PER_LINE + Self::bottom_padding(window_size))
 			)
-			.min(self.max_contents_index() - self.max_contents_index() % BYTES_PER_LINE);
+			.min(self.max_contents_index().floored_to_the_nearest(BYTES_PER_LINE));
 	}
 	
-	const fn align_view_top(&mut self) {
+	const fn align_view_top(&mut self, window_size: WindowSize) {
 		self.scroll_position = self.primary_cursor.head
-			.saturating_sub(self.primary_cursor.head % BYTES_PER_LINE)
-			.saturating_sub(BYTES_OF_PADDING);
+			.floored_to_the_nearest(BYTES_PER_LINE)
+			.saturating_sub(self.top_padding(window_size));
 	}
 	
 	fn till_mark(&mut self, extend: bool, window_size: WindowSize) {
@@ -870,11 +814,50 @@ fn inspect_color(selection: &[u8]) -> Vec<Span<'static>> {
 
 // MARK: helpers
 impl Buffer {
+	const fn bottom_padding(window_size: WindowSize) -> usize {
+		if window_size.hex_rows() <= LINES_OF_PADDING * 2 {
+			0
+		} else {
+			BYTES_OF_PADDING
+		}
+	}
+	
+	const fn top_padding(&self, window_size: WindowSize) -> usize {
+		if window_size.hex_rows() <= LINES_OF_PADDING * 2 || self.scroll_position == 0 {
+			0
+		} else {
+			BYTES_OF_PADDING
+		}
+	}
+	
+	pub const fn clamp_screen_to_contents(&mut self, window_size: WindowSize) {
+		let max_scroll_position = self.max_contents_index()
+			.floored_to_the_nearest(BYTES_PER_LINE)
+			.saturating_sub(Self::bottom_padding(window_size));
+		
+		if self.scroll_position > max_scroll_position {
+			self.scroll_position = max_scroll_position;
+		}
+	}
+	
 	pub fn clamp_screen_to_primary_cursor(&mut self, window_size: WindowSize) {
-		if self.primary_cursor.head < self.scroll_position + BYTES_OF_PADDING {
-			self.align_view_top();
-		} else if self.primary_cursor.head > self.scroll_position + (window_size.visible_byte_count() - 1).saturating_sub(BYTES_OF_PADDING) {
+		if self.primary_cursor.head < self.scroll_position + self.top_padding(window_size) {
+			self.align_view_top(window_size);
+		} else if self.primary_cursor.head > self.scroll_position + (window_size.visible_byte_count() - 1).saturating_sub(Self::bottom_padding(window_size)) {
 			self.align_view_bottom(window_size);
+		}
+	}
+	
+	fn clamp_primary_cursor_to_screen(&mut self, window_size: WindowSize) {
+		let min = self.scroll_position + self.top_padding(window_size);
+		let max = self.scroll_position + window_size.visible_byte_count()
+			.saturating_sub(Self::bottom_padding(window_size))
+			.saturating_sub(BYTES_PER_LINE);
+		
+		if self.mode == Mode::Select {
+			self.primary_cursor.head = self.primary_cursor.head.clamp(min, max);
+		} else {
+			self.primary_cursor.clamp(min, max);
 		}
 	}
 }

@@ -2,7 +2,7 @@ use std::{borrow::Cow, iter::{self, repeat_n}, mem};
 use itertools::Itertools;
 use ratatui::{style::{Color, Style, Stylize}, text::Span};
 
-use crate::{BYTES_PER_CHUNK, BYTES_PER_LINE, CHUNKS_PER_LINE, buffer::{Buffer, Mode, PartialAction}, cardinality::HasCardinality, cursor::InCursor, custom_greys::CustomGreys, empty_span::empty_span};
+use crate::{BYTES_PER_CHUNK, BYTES_PER_LINE, CHUNKS_PER_LINE, buffer::{Buffer, Mode, PartialAction}, utilities::{CustomGreys, empty_span, HasCardinality}, cursor::InCursor};
 
 impl Buffer {
 	pub fn render_chunks(
@@ -132,7 +132,7 @@ impl Buffer {
 		if let Some(place_in_cursor) = self.primary_cursor.contains(address) {
 			let head_color = match self.mode {
 				Mode::Select => Color::Yellow,
-				_ => Color::Gray
+				Mode::Normal => Color::Gray
 			};
 			
 			match place_in_cursor {

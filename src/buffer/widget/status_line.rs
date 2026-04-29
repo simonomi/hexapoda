@@ -1,4 +1,4 @@
-use crate::{buffer::{Buffer, Mode}, custom_greys::CustomGreys};
+use crate::{buffer::{Buffer, Mode}, utilities::CustomGreys};
 use ratatui::{style::{Color, Stylize}, text::{Line, Span, Text}};
 
 impl Buffer {

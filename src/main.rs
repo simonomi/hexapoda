@@ -23,9 +23,7 @@ mod edit_action;
 mod arguments;
 mod window_size;
 
-mod cardinality;
-mod empty_span;
-mod custom_greys;
+mod utilities;
 
 const BYTES_PER_LINE: usize = 0x10;
 const BYTES_PER_CHUNK: usize = 4;

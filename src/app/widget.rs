@@ -1,5 +1,5 @@
 use ratatui::{layout::Rect, style::{Color, Stylize}, text::{Line, Span}, widgets::Widget};
-use crate::{app::App, buffer::Buffer, custom_greys::CustomGreys};
+use crate::{app::App, buffer::Buffer, utilities::CustomGreys};
 
 impl Widget for &App {
 	fn render(self, area: Rect, buf: &mut ratatui::buffer::Buffer) {

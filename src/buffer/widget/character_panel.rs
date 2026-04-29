@@ -1,6 +1,6 @@
 use std::{borrow::Cow, iter, mem};
 use ratatui::{style::{Color, Style, Stylize}, text::Span};
-use crate::{buffer::Buffer, cardinality::HasCardinality, cursor::InCursor, custom_greys::CustomGreys, empty_span::empty_span};
+use crate::{buffer::Buffer, utilities::{CustomGreys, empty_span, HasCardinality}, cursor::InCursor};
 
 impl Buffer {
 	pub fn render_character_panel(

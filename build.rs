@@ -1,5 +1,6 @@
 use clap::{CommandFactory, ValueEnum};
 use clap_complete::{generate_to, Shell};
+use clap_complete_nushell::Nushell;
 use std::env;
 use std::io::Error;
 
@@ -15,8 +16,11 @@ fn main() -> Result<(), Error> {
 	for &shell in Shell::value_variants() {
 		generate_to(shell, &mut command, "hexapoda", &output_folder)?;
 	}
+	generate_to(Nushell, &mut command, "hexapoda", &output_folder)?;
 	
-	println!("cargo:warning=completions generated in {output_folder:?}");
+	clap_mangen::generate_to(command, &output_folder)?;
+	
+	println!("cargo:warning=completions and manpage generated in {output_folder:?}");
 	println!("cargo:rerun-if-changed=src/arguments.rs");
 	
 	Ok(())

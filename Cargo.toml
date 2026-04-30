@@ -20,3 +20,5 @@ toml = "1.1.2"
 [build-dependencies]
 clap = { version = "4.6.0", features = ["derive"] }
 clap_complete = "4.6.3"
+clap_complete_nushell = "4.6.0"
+clap_mangen = "0.3.0"

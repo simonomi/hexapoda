@@ -23,7 +23,6 @@ mod action;
 mod edit_action;
 mod arguments;
 mod window_size;
-
 mod utilities;
 
 const BYTES_PER_LINE: usize = 0x10;
@@ -34,13 +33,13 @@ const LINES_OF_PADDING: usize = 5;
 const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 
 // TODO:
+// - update showcase
 // - `go` goto entered offset
 // - search
 //   - `/` hex, `A-/` ascii
 //   - if non-hex-digit typed, search ascii
-// - update showcase
 // - inspector translations for varint
-// - M mark at selected offset (like Jm)
+// - M mark at selected offset? (like Jm)
 // - diffing
 //   - doesn't have to be anything fancy, just compare each byte 1:1
 //   - sync scroll ? sync selections ??

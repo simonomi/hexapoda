@@ -7,6 +7,7 @@ keywords = ["cli", "tui", "hex", "tool", "editor"]
 categories = ["command-line-utilities"]
 license = "GPL-3.0-only"
 edition = "2024"
+build = "build.rs"
 
 [dependencies]
 clap = { version = "4.6.0", features = ["derive"] }
@@ -15,3 +16,7 @@ itertools = "0.14.0"
 ratatui = "0.30.0"
 serde = { version = "1.0.228", features = ["derive"] }
 toml = "1.1.2"
+
+[build-dependencies]
+clap = { version = "4.6.0", features = ["derive"] }
+clap_complete = "4.6.3"

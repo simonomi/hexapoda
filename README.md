@@ -19,7 +19,7 @@ currently, hexapoda is very unpolished, and missing some major features. if you'
 	- split selection(s) into #-byte chunks
 - undo/redo
 - inspect the current selection(s)
-	- signed, unsigned, fixed-point, UTF-8, color
+	- signed, unsigned, binary, fixed-point, UTF-8, color
 - mark notable offsets
 - jump to selected offset
 

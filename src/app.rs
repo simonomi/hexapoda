@@ -224,6 +224,7 @@ impl App {
 						byte_column
 					);
 					current_buffer.cursors.clear();
+					current_buffer.clamp_screen_to_primary_cursor(self.window_size);
 				}
 			},
 			MouseEventKind::ScrollDown => {

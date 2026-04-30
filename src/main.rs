@@ -33,7 +33,7 @@ const LINES_OF_PADDING: usize = 5;
 const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 
 // TODO:
-// - update showcase
+// - click and drag selection
 // - `go` goto entered offset
 // - search
 //   - `/` hex, `A-/` ascii

@@ -121,13 +121,15 @@ impl Buffer {
 		primary_cursor_register: &[u8],
 		other_cursor_registers: &[Vec<u8>],
 		window_size: WindowSize
-	) -> Option<AppAction> {
+	) -> (Option<AppAction>, bool) {
+		let mut should_redraw = !self.alert_message.content.is_empty();
 		self.alert_message = "".into();
 		// self.logs.push(format!("{event:?}"));
 		
 		let app_action = match self.partial_action {
 			Some(PartialAction::Replace) => {
 				self.handle_replace(event, window_size);
+				should_redraw = true;
 				None
 			},
 			Some(PartialAction::Repeat) => {
@@ -138,9 +140,14 @@ impl Buffer {
 					other_cursor_registers,
 					window_size
 				);
+				should_redraw = true;
 				None
 			},
-			_ => self.handle_other_modes(event, config, window_size),
+			_ => {
+				let (app_action, redraw) = self.handle_other_modes(event, config, window_size);
+				should_redraw |= redraw;
+				app_action
+			},
 		};
 		
 		assert!(self.scroll_position.is_multiple_of(BYTES_PER_LINE));
@@ -154,7 +161,7 @@ impl Buffer {
 		
 		debug_assert!(self.cursors.is_sorted_by_key(|cursor| cursor.head));
 		
-		app_action
+		(app_action, should_redraw)
 	}
 	
 	fn handle_replace(&mut self, event: KeyEvent, window_size: WindowSize) {
@@ -190,17 +197,20 @@ impl Buffer {
 		event: KeyEvent,
 		config: &Config,
 		window_size: WindowSize
-	) -> Option<AppAction> {
+	) -> (Option<AppAction>, bool) {
 		use Action::*;
 		
 		let mut result = None;
 		
 		let should_reset_partial = self.partial_action.is_some();
+		let mut should_redraw = should_reset_partial;
 		
 		if let Some(mode_config) = config.0.get(&self.mode) &&
 		   let Some(keybinds) = mode_config.0.get(&self.partial_action) &&
 		   let Some(action) = keybinds.0.get(&event.into())
 		{
+			should_redraw = true;
+			
 			if action.clears_popups() {
 				self.popups.clear();
 			}
@@ -232,7 +242,7 @@ impl Buffer {
 			self.partial_action = None;
 		}
 		
-		result
+		(result, should_redraw)
 	}
 	
 	fn handle_repeat(

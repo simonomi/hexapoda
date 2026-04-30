@@ -33,7 +33,6 @@ const LINES_OF_PADDING: usize = 5;
 const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 
 // TODO:
-// - click and drag selection
 // - `go` goto entered offset
 // - search
 //   - `/` hex, `A-/` ascii
@@ -90,12 +89,16 @@ fn main() {
 	crossterm::terminal::enable_raw_mode().unwrap();
 	terminal.backend_mut().queue(EnableMouseCapture).unwrap();
 	
+	let mut should_redraw = true;
+	
 	while !app.should_quit {
-		terminal.draw(|frame| {
-			frame.render_widget(&app, frame.area());
-		}).unwrap();
+		if should_redraw {
+			terminal.draw(|frame| {
+				frame.render_widget(&app, frame.area());
+			}).unwrap();
+		}
 		
-		app.handle_events(&mut terminal);
+		should_redraw = app.handle_events(&mut terminal);
 	}
 	
 	terminal.backend_mut().queue(DisableMouseCapture).unwrap();

@@ -4,7 +4,7 @@ a colorful modal hex editor
 
 (the name comes from [the subphylum](https://en.wikipedia.org/wiki/Hexapoda))
 
-[![asciicast](https://asciinema.org/a/fsVwqdn846Ar5CQZ.svg)](https://asciinema.org/a/fsVwqdn846Ar5CQZ)
+[![asciicast](https://asciinema.org/a/P2tCRvr4cwvmsmPl.svg)](https://asciinema.org/a/P2tCRvr4cwvmsmPl)
 
 ## status
 

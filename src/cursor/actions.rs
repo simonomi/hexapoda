@@ -93,7 +93,7 @@ impl Cursor {
 		}
 	}
 	
-	pub const fn goto_line_start(&mut self) {
+	pub fn goto_line_start(&mut self) {
 		self.extend_line_start();
 		self.collapse();
 	}
@@ -108,12 +108,12 @@ impl Cursor {
 		self.collapse();
 	}
 	
-	pub const fn goto_file_end(&mut self, max: usize) {
+	pub fn goto_file_end(&mut self, max: usize) {
 		self.extend_file_end(max);
 		self.collapse();
 	}
 	
-	pub const fn extend_line_start(&mut self) {
+	pub fn extend_line_start(&mut self) {
 		self.head.floor_to_the_nearest(BYTES_PER_LINE);
 	}
 	
@@ -128,7 +128,7 @@ impl Cursor {
 		self.head %= BYTES_PER_LINE;
 	}
 	
-	pub const fn extend_file_end(&mut self, max: usize) {
+	pub fn extend_file_end(&mut self, max: usize) {
 		self.head += previous_multiple_of(BYTES_PER_LINE, max + 1 - self.head);
 		
 	}
@@ -156,7 +156,7 @@ impl Cursor {
 		}
 	}
 	
-	pub const fn move_previous_word_start(&mut self) {
+	pub fn move_previous_word_start(&mut self) {
 		if self.head == 0 { return; }
 		
 		self.collapse();
@@ -188,7 +188,7 @@ impl Cursor {
 		}
 	}
 	
-	pub const fn extend_previous_word_start(&mut self) {
+	pub fn extend_previous_word_start(&mut self) {
 		if self.head == 0 { return; }
 		
 		if self.head.is_multiple_of(4) { // at the beginning of a word
@@ -236,7 +236,7 @@ impl Cursor {
 	}
 }
 
-const fn previous_multiple_of(multiple: usize, number: usize) -> usize {
+fn previous_multiple_of(multiple: usize, number: usize) -> usize {
 	number.saturating_sub(1).floored_to_the_nearest(multiple)
 }
 

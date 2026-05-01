@@ -1,4 +1,4 @@
-use std::{cmp::min, collections::hash_set::Entry, convert::identity, fs::File, io::Write, iter, mem::{replace, swap}};
+use std::{cmp::min, convert::identity, fs::File, io::Write, iter, mem::{replace, swap}};
 use itertools::Itertools;
 use ratatui::{style::{Color, Stylize}, text::Span};
 use crate::{BYTES_OF_PADDING, BYTES_PER_LINE, LINES_OF_PADDING, action::BufferAction, buffer::{Buffer, InspectionStatus, Mode, PartialAction}, cursor::Cursor, edit_action::EditAction, popup::Popup, utilities::{Floorable, SaturatingSubtract}, window_size::WindowSize};
@@ -467,20 +467,18 @@ impl Buffer {
 	}
 	
 	fn toggle_mark(&mut self) {
-		match self.marks.entry(self.primary_cursor.lower_bound()) {
-			Entry::Occupied(occupied_entry) => { occupied_entry.remove(); },
-			Entry::Vacant(vacant_entry) => vacant_entry.insert(),
+		if !self.marks.insert(self.primary_cursor.lower_bound()) {
+			self.marks.remove(&self.primary_cursor.lower_bound());
 		}
 		
 		for cursor in &self.cursors {
-			match self.marks.entry(cursor.lower_bound()) {
-				Entry::Occupied(occupied_entry) => { occupied_entry.remove(); },
-				Entry::Vacant(vacant_entry) => vacant_entry.insert(),
+			if !self.marks.insert(cursor.lower_bound()) {
+				self.marks.remove(&cursor.lower_bound());
 			}
 		}
 	}
 	
-	const fn align_view_center(&mut self, window_size: WindowSize) {
+	fn align_view_center(&mut self, window_size: WindowSize) {
 		let half_a_screen = window_size.visible_byte_count() / 2;
 		
 		self.scroll_position = self.primary_cursor.head
@@ -499,7 +497,7 @@ impl Buffer {
 			.min(self.max_contents_index().floored_to_the_nearest(BYTES_PER_LINE));
 	}
 	
-	const fn align_view_top(&mut self, window_size: WindowSize) {
+	fn align_view_top(&mut self, window_size: WindowSize) {
 		self.scroll_position = self.primary_cursor.head
 			.floored_to_the_nearest(BYTES_PER_LINE)
 			.saturating_sub(self.top_padding(window_size));
@@ -676,7 +674,7 @@ fn inspect(selection: &[u8]) -> Vec<Span<'static>> {
 	
 	let utf8 = str::from_utf8(selection).ok()
 		.filter(|_| selection.len() != 1)
-		.map(|utf8| utf8.trim_suffix('\0'))
+		.map(|utf8| utf8.trim_end_matches('\0'))
 		.filter(|utf8| !utf8.contains(is_illegal_control_character))
 		.map(|utf8| Span::from(format!("\"{utf8}\"")).red());
 	
@@ -830,7 +828,7 @@ impl Buffer {
 		}
 	}
 	
-	pub const fn clamp_screen_to_contents(&mut self, window_size: WindowSize) {
+	pub fn clamp_screen_to_contents(&mut self, window_size: WindowSize) {
 		let max_scroll_position = self.max_contents_index()
 			.floored_to_the_nearest(BYTES_PER_LINE)
 			.saturating_sub(Self::bottom_padding(window_size));
@@ -868,7 +866,11 @@ pub fn bytes_to_nat(bytes: &[u8]) -> Option<u64> {
 		.rev() // little-endian
 		.skip_while(|&&byte| byte == 0)
 		.try_fold(u64::default(), |result, &byte| {
-			Some(result.shl_exact(8)? | u64::from(byte))
+			if result.leading_zeros() < 8 {
+				None
+			} else {
+				Some((result << 8) | u64::from(byte))
+			}
 		})
 }
 

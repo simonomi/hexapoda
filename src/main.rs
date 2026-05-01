@@ -1,11 +1,6 @@
 #![warn(clippy::pedantic, clippy::nursery)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::enum_glob_use)]
-#![feature(get_disjoint_mut_helpers)]
-#![feature(exact_bitshifts)]
-#![feature(hash_set_entry)]
-#![feature(trim_prefix_suffix)]
-#![feature(const_trait_impl)]
 
 use arguments::Arguments;
 use clap::Parser;

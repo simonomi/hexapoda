@@ -1,9 +1,8 @@
-use core::slice::GetDisjointMutIndex;
 use std::{collections::HashSet, fs::File, io::{self, Read}, path::PathBuf};
 use crossterm::event::KeyEvent;
 use ratatui::{style::Stylize, text::Span};
 use serde::{Deserialize, Serialize};
-use crate::{BYTES_PER_LINE, action::{Action, AppAction}, buffer::actions::bytes_to_nat, config::Config, cursor::Cursor, edit_action::EditAction, popup::Popup, window_size::WindowSize};
+use crate::{BYTES_PER_LINE, action::{Action, AppAction}, buffer::actions::bytes_to_nat, config::Config, cursor::Cursor, edit_action::EditAction, popup::Popup, utilities::IsOverlapping, window_size::WindowSize};
 
 mod widget;
 mod actions;

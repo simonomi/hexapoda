@@ -382,51 +382,12 @@ impl Buffer {
 	}
 	
 	fn jump_to_selected_offset(&mut self, window_size: WindowSize) {
+		// check all cursors before modifying any
 		if !iter::once(&self.primary_cursor)
 			.chain(&self.cursors)
 			.all(|cursor| {
 				bytes_to_nat(&self.contents[cursor.range()])
-					.map(|nat| nat as usize)
-					.is_some_and(|offset| offset < self.contents.len())
-			})
-		{
-			if self.cursors.is_empty() {
-				self.alert_message = Span::from(
-					"selection is not a valid offset"
-				).red();
-			} else {
-				self.alert_message = Span::from(
-					"not all selections are valid offsets"
-				).red();
-			}
-			return;
-		}
-		
-		self.primary_cursor = Cursor::at(
-			bytes_to_nat(&self.contents[self.primary_cursor.range()]).unwrap() as usize
-		);
-		
-		for cursor in &mut self.cursors {
-			*cursor = Cursor::at(
-				bytes_to_nat(&self.contents[cursor.range()]).unwrap() as usize
-			);
-		}
-		
-		self.cursors.sort_by_key(|cursor| cursor.head);
-		
-		self.combine_cursors_if_overlapping();
-		self.clamp_screen_to_primary_cursor(window_size);
-	}
-	
-	fn jump_to_selected_offset_relative_to_mark(&mut self, window_size: WindowSize) {
-		let mut sorted_marks: Vec<_> = self.marks.iter().copied().collect();
-		sorted_marks.sort_unstable();
-		
-		if !iter::once(&self.primary_cursor)
-			.chain(&self.cursors)
-			.all(|cursor| {
-				bytes_to_nat(&self.contents[cursor.range()])
-					.map(|offset| mark_before(cursor.lower_bound(), &sorted_marks) + offset as usize)
+					.and_then(|nat| usize::try_from(nat).ok())
 					.is_some_and(|offset| offset < self.contents.len())
 			})
 		{
@@ -444,19 +405,63 @@ impl Buffer {
 		
 		self.primary_cursor = Cursor::at(
 			bytes_to_nat(&self.contents[self.primary_cursor.range()])
-				.map(|offset| {
-					mark_before(self.primary_cursor.lower_bound(), &sorted_marks) + offset as usize
-				})
 				.unwrap()
+				.try_into().unwrap()
 		);
 		
 		for cursor in &mut self.cursors {
 			*cursor = Cursor::at(
 				bytes_to_nat(&self.contents[cursor.range()])
-				.map(|offset| {
-					mark_before(cursor.lower_bound(), &sorted_marks) + offset as usize
-				})
-				.unwrap()
+					.unwrap()
+					.try_into().unwrap()
+			);
+		}
+		
+		self.cursors.sort_by_key(|cursor| cursor.head);
+		
+		self.combine_cursors_if_overlapping();
+		self.clamp_screen_to_primary_cursor(window_size);
+	}
+	
+	fn jump_to_selected_offset_relative_to_mark(&mut self, window_size: WindowSize) {
+		let mut sorted_marks: Vec<_> = self.marks.iter().copied().collect();
+		sorted_marks.sort_unstable();
+		
+		// check all cursors before modifying any
+		if !iter::once(&self.primary_cursor)
+			.chain(&self.cursors)
+			.all(|cursor| {
+				bytes_to_nat(&self.contents[cursor.range()])
+					.and_then(|offset| usize::try_from(offset).ok())
+					.map(|offset| mark_before(cursor.lower_bound(), &sorted_marks) + offset)
+					.is_some_and(|offset| offset < self.contents.len())
+			})
+		{
+			if self.cursors.is_empty() {
+				self.alert_message = Span::from(
+					"selection is not a valid offset"
+				).red();
+			} else {
+				self.alert_message = Span::from(
+					"not all selections are valid offsets"
+				).red();
+			}
+			return;
+		}
+		
+		self.primary_cursor = Cursor::at(
+			mark_before(self.primary_cursor.lower_bound(), &sorted_marks) +
+			usize::try_from(
+				bytes_to_nat(&self.contents[self.primary_cursor.range()]).unwrap()
+			).unwrap()
+		);
+		
+		for cursor in &mut self.cursors {
+			*cursor = Cursor::at(
+				mark_before(cursor.lower_bound(), &sorted_marks) +
+				usize::try_from(
+					bytes_to_nat(&self.contents[cursor.range()]).unwrap()
+				).unwrap()
 			);
 		}
 		
@@ -658,6 +663,7 @@ impl Buffer {
 	}
 }
 
+#[allow(clippy::too_many_lines)]
 fn inspect(selection: &[u8]) -> Vec<Span<'static>> {
 	let nat = bytes_to_nat(selection);
 	
@@ -680,7 +686,8 @@ fn inspect(selection: &[u8]) -> Vec<Span<'static>> {
 	
 	let fixedpoint2012 = nat
 		.filter(|_| selection.len() == 4)
-		.map(|nat| f64::from(nat as u32) / f64::from(1 << 12))
+		.map(|nat| u32::try_from(nat).unwrap())
+		.map(|nat| f64::from(nat) / f64::from(1 << 12))
 		.map(|fixedpoint2012| {
 			let two_decimals_is_enough = (fixedpoint2012 * 100.0).fract() == 0.0;
 			let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
@@ -690,7 +697,8 @@ fn inspect(selection: &[u8]) -> Vec<Span<'static>> {
 	
 	let fixedpoint2012_signed = int
 		.filter(|_| selection.len() == 4)
-		.map(|int| f64::from(int as i32) / f64::from(1 << 12))
+		.map(|int| i32::try_from(int).unwrap())
+		.map(|int| f64::from(int) / f64::from(1 << 12))
 		.map(|fixedpoint2012_signed| {
 			let two_decimals_is_enough = (fixedpoint2012_signed * 100.0).fract() == 0.0;
 			let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
@@ -700,7 +708,8 @@ fn inspect(selection: &[u8]) -> Vec<Span<'static>> {
 	
 	let fixedpoint1616 = nat
 		.filter(|_| selection.len() == 4)
-		.map(|nat| f64::from(nat as u32) / f64::from(1 << 16))
+		.map(|nat| u32::try_from(nat).unwrap())
+		.map(|nat| f64::from(nat) / f64::from(1 << 16))
 		.map(|fixedpoint1616| {
 			let two_decimals_is_enough = (fixedpoint1616 * 100.0).fract() == 0.0;
 			let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
@@ -710,7 +719,8 @@ fn inspect(selection: &[u8]) -> Vec<Span<'static>> {
 	
 	let fixedpoint1616_signed = int
 		.filter(|_| selection.len() == 4)
-		.map(|int| f64::from(int as i32) / f64::from(1 << 16))
+		.map(|int| i32::try_from(int).unwrap())
+		.map(|int| f64::from(int) / f64::from(1 << 16))
 		.map(|fixedpoint1616_signed| {
 			let two_decimals_is_enough = (fixedpoint1616_signed * 100.0).fract() == 0.0;
 			let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
@@ -720,7 +730,8 @@ fn inspect(selection: &[u8]) -> Vec<Span<'static>> {
 	
 	let fixedpoint124 = nat
 		.filter(|_| selection.len() == 2)
-		.map(|nat| f64::from(nat as u16) / f64::from(1 << 4))
+		.map(|nat| u16::try_from(nat).unwrap())
+		.map(|nat| f64::from(nat) / f64::from(1 << 4))
 		.map(|fixedpoint124| {
 			let two_decimals_is_enough = (fixedpoint124 * 100.0).fract() == 0.0;
 			let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
@@ -730,7 +741,8 @@ fn inspect(selection: &[u8]) -> Vec<Span<'static>> {
 	
 	let fixedpoint88 = nat
 		.filter(|_| selection.len() == 2)
-		.map(|nat| f64::from(nat as u16) / f64::from(1 << 8))
+		.map(|nat| u16::try_from(nat).unwrap())
+		.map(|nat| f64::from(nat) / f64::from(1 << 8))
 		.map(|fixedpoint88| {
 			let two_decimals_is_enough = (fixedpoint88 * 100.0).fract() == 0.0;
 			let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
@@ -740,7 +752,8 @@ fn inspect(selection: &[u8]) -> Vec<Span<'static>> {
 	
 	let fixedpoint412 = nat
 		.filter(|_| selection.len() == 2)
-		.map(|nat| f64::from(nat as u16) / f64::from(1 << 12))
+		.map(|nat| u16::try_from(nat).unwrap())
+		.map(|nat| f64::from(nat) / f64::from(1 << 12))
 		.map(|fixedpoint412| {
 			let two_decimals_is_enough = (fixedpoint412 * 100.0).fract() == 0.0;
 			let approximate_symbol = if two_decimals_is_enough { "" } else { "~" };
@@ -759,7 +772,8 @@ fn inspect(selection: &[u8]) -> Vec<Span<'static>> {
 	let color555 = nat
 		.filter(|_| selection.len() == 2)
 		.filter(|&nat| nat >> 15 == 0)
-		.map(|nat| color555_to_color888(nat as u16))
+		.map(|nat| u16::try_from(nat).unwrap())
+		.map(color555_to_color888)
 		.map(|[red, green, blue]| {
 			Span::from(format!("555: #{red:02X}{green:02X}{blue:02X}"))
 				.fg(Color::Rgb(red, green, blue))
@@ -797,7 +811,8 @@ fn inspect_color(selection: &[u8]) -> Vec<Span<'static>> {
 	let color555 = nat
 		.filter(|_| selection.len() == 2)
 		.filter(|&nat| nat >> 15 == 0)
-		.map(|nat| color555_to_color888(nat as u16))
+		.map(|nat| u16::try_from(nat).unwrap())
+		.map(color555_to_color888)
 		.map(|[red, green, blue]| {
 			Span::from(format!("#{red:02X}{green:02X}{blue:02X}"))
 				.fg(Color::Rgb(red, green, blue))
@@ -874,11 +889,11 @@ pub fn bytes_to_nat(bytes: &[u8]) -> Option<u64> {
 		})
 }
 
-const fn nat_to_int_if_different(nat: u64, bytes: usize) -> Option<i64> {
+fn nat_to_int_if_different(nat: u64, bytes: usize) -> Option<i64> {
 	match bytes {
-		1 if nat >  i8::MAX as u64 => Some((nat as u8).cast_signed() as i64),
-		2 if nat > i16::MAX as u64 => Some((nat as u16).cast_signed() as i64),
-		4 if nat > i32::MAX as u64 => Some((nat as u32).cast_signed() as i64),
+		1 if nat >  i8::MAX as u64 => Some(i64::from(u8::try_from(nat).unwrap().cast_signed())),
+		2 if nat > i16::MAX as u64 => Some(i64::from(u16::try_from(nat).unwrap().cast_signed())),
+		4 if nat > i32::MAX as u64 => Some(i64::from(u32::try_from(nat).unwrap().cast_signed())),
 		8 if nat > i64::MAX as u64 => Some(nat.cast_signed()),
 		_ => None,
 	}

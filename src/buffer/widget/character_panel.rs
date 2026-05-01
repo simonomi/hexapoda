@@ -39,11 +39,15 @@ const fn create_character_lookup_table() -> [Span<'static>; u8::CARDINALITY] {
 	
 	let mut index = 0;
 	while index < u8::CARDINALITY {
-		result[index].style = style_for_character(index as u8);
+		#[allow(clippy::cast_possible_truncation)]
+		let byte = index as u8;
+		
+		result[index].style = style_for_character(byte);
 		mem::forget(mem::replace(
 			&mut result[index].content,
-			content_for_character(index as u8)
+			content_for_character(byte)
 		));
+		
 		index += 1;
 	}
 	

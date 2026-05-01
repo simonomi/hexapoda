@@ -61,8 +61,8 @@ impl Widget for &Buffer {
 				
 				let popup_area = popup
 					.area_at(
-						area.x + byte_column_to_screen_column(hex_column) as u16,
-						area.y + (position_on_screen / BYTES_PER_LINE) as u16 + 1
+						area.x + byte_column_to_screen_column(hex_column),
+						area.y + u16::try_from(position_on_screen / BYTES_PER_LINE).unwrap() + 1
 					)
 					.clamp(hex_area);
 				
@@ -108,7 +108,7 @@ impl Buffer {
 	}
 }
 
-fn byte_column_to_screen_column(byte_column: usize) -> usize {
+fn byte_column_to_screen_column(byte_column: usize) -> u16 {
 	match byte_column {
 		0 => 10,
 		1 => 13,

@@ -14,7 +14,7 @@ impl Popup {
 			at,
 			width: lines
 				.iter()
-				.map(|line| line.width() as u16)
+				.map(|line| u16::try_from(line.width()).unwrap())
 				.max()
 				.unwrap_or(0),
 			primary: false,
@@ -22,12 +22,12 @@ impl Popup {
 		}
 	}
 	
-	pub const fn area_at(&self, x: u16, y: u16) -> Rect {
+	pub fn area_at(&self, x: u16, y: u16) -> Rect {
 		Rect {
 			x,
 			y,
 			width: self.width + 2,
-			height: self.lines.len() as u16
+			height: u16::try_from(self.lines.len()).unwrap()
 		}
 	}
 	
@@ -56,7 +56,9 @@ impl Widget for Popup {
 		
 		for (line, area) in self.lines.iter().zip(area.rows()) {
 			line.render(
-				area.centered_horizontally(Constraint::Length(line.width() as u16)),
+				area.centered_horizontally(
+					Constraint::Length(u16::try_from(line.width()).unwrap())
+				),
 				buf
 			);
 		}

@@ -383,7 +383,7 @@ mod tests {
 	#[test]
 	fn nybble_from_hex_digits_are_correct() {
 		for (index, character) in ('0'..='9').enumerate() {
-			assert_eq!(nybble_from_hex(character), Some(index as u8));
+			assert_eq!(nybble_from_hex(character), Some(u8::try_from(index).unwrap()));
 		}
 	}
 }

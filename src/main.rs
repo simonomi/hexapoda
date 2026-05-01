@@ -1,12 +1,10 @@
 #![warn(clippy::pedantic, clippy::nursery)]
-#![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::enum_glob_use)]
 
 use arguments::Arguments;
 use clap::Parser;
 use app::App;
 use crossterm::{QueueableCommand, event::{DisableMouseCapture, EnableMouseCapture}};
-
 use crate::config::Config;
 
 mod app;
@@ -50,10 +48,7 @@ const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 //   - replace-and-keep-going
 //     - mode
 //   - change
-// - edit character panel
-//   - modifier on existing keys like teehee? or jump to panel?
-//     - A-r replaces with ASCII ?
-//     - if jump to panel, space?
+// - A-r replaces with ASCII
 // - jumplist
 // - p
 // - [/] to cycle view offset?

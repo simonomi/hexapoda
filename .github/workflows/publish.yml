@@ -11,9 +11,24 @@ permissions:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.info.runs-on }}
     # permissions:
     #   id-token: write # Required for OIDC token exchange
+    strategy:
+      matrix:
+        info:
+          - os: "macOS"
+            runs-on: "macos-latest"
+            executable-extension: ""
+          - os: "linux-x86"
+            runs-on: "ubuntu-latest"
+            executable-extension: ""
+          - os: "linux-arm"
+            runs-on: "ubuntu-24.04-arm"
+            executable-extension: ""
+          - os: "Windows"
+            runs-on: "windows-latest"
+            executable-extension: ".exe"
     steps:
     - uses: actions/checkout@v6
     - name: check version
@@ -23,13 +38,13 @@ jobs:
     - run: cargo build --release --locked
     - name: package
       # TODO: include completions/man page
-      run: tar -azcf hexapoda-linux-x86.zip -C "target/release/" hexapoda
+      run: tar -azcf "hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.zip" -C "target/release/" "hexapoda${{ matrix.info.executable-extension }}"
     - name: release
       uses: softprops/action-gh-release@v2
       with:
         draft: true
         name: "${{ github.ref_name }}"
-        files: hexapoda-linux-x86.zip
+        files: hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.zip
     # TODO: should cargo releases be manual ? just in case it fails on another platform?
     # - uses: rust-lang/crates-io-auth-action@v1
     #   id: auth

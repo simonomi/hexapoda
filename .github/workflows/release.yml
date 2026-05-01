@@ -15,17 +15,23 @@ jobs:
     strategy:
       matrix:
         info:
-          - os: "macOS"
+          - os: "macOS-arm"
             runs-on: "macos-latest"
             executable-extension: ""
-          - os: "linux-x86"
+          - os: "macOS-intel"
+            runs-on: "macos-26-intel"
+            executable-extension: ""
+          - os: "linux-x86_64"
             runs-on: "ubuntu-latest"
             executable-extension: ""
           - os: "linux-arm"
             runs-on: "ubuntu-24.04-arm"
             executable-extension: ""
-          - os: "Windows"
+          - os: "Windows-x86_64"
             runs-on: "windows-latest"
+            executable-extension: ".exe"
+          - os: "Windows-arm"
+            runs-on: "windows-11-arm"
             executable-extension: ".exe"
     steps:
     - uses: actions/checkout@v6

@@ -23,3 +23,24 @@ clap = { version = "4.6.0", features = ["derive"] }
 clap_complete = "4.6.3"
 clap_complete_nushell = "4.6.0"
 clap_mangen = "0.3.0"
+
+[package.metadata.binstall]
+pkg-fmt = "zip"
+
+[package.metadata.binstall.overrides.'cfg(all(target_os = "macos", target_arch = "aarch64" ))']
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-macOS-arm-v{ version }{ archive-suffix }"
+
+[package.metadata.binstall.overrides.'cfg(all(target_os = "macos", target_arch = "x86_64" ))']
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-macOS-intel-v{ version }{ archive-suffix }"
+
+[package.metadata.binstall.overrides.'cfg(all(target_os = "linux", target_arch = "x86_64" ))']
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-linux-x86_64-v{ version }{ archive-suffix }"
+
+[package.metadata.binstall.overrides.'cfg(all(target_os = "linux", target_arch = "aarch64" ))']
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-linux-arm-v{ version }{ archive-suffix }"
+
+[package.metadata.binstall.overrides.'cfg(all(target_os = "windows", target_arch = "x86_64" ))']
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-Windows-x86_64-v{ version }{ archive-suffix }"
+
+[package.metadata.binstall.overrides.'cfg(all(target_os = "windows", target_arch = "aarch64" ))']
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-Windows-arm-v{ version }{ archive-suffix }"

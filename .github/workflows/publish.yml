@@ -6,17 +6,20 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write # Required for OIDC token exchange
+    # permissions:
+    #   id-token: write # Required for OIDC token exchange
     steps:
     - uses: actions/checkout@v6
     - name: check version
       # cut off the v part of the tag to only search for the number
       run: grep -q "$(echo "${{ github.ref_name }}" | cut -c2-)" Cargo.toml 
-    - run: cargo test
+    - run: cargo test --release
     - run: cargo build --release --locked
     - name: package
       # TODO: include completions/man page

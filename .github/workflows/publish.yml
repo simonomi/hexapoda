@@ -1,6 +1,7 @@
-name: publish to crates.io
+name: publish release
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - "v*"
@@ -12,8 +13,23 @@ jobs:
       id-token: write # Required for OIDC token exchange
     steps:
     - uses: actions/checkout@v6
-    - uses: rust-lang/crates-io-auth-action@v1
-      id: auth
-    - run: cargo publish
-      env:
-        CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+    - name: check version
+      # cut off the v part of the tag to only search for the number
+      run: grep -q "$(echo "${{ github.ref_name }}" | cut -c2-)" Cargo.toml 
+    - run: cargo test
+    - run: cargo build --release --locked
+    - name: package
+      # TODO: include completions/man page
+      run: tar -azcf hexapoda-linux-x86.zip -C "target/release/" hexapoda
+    - name: release
+      uses: softprops/action-gh-release@v2
+      with:
+        draft: true
+        name: "${{ github.ref_name }}"
+        files: hexapoda-linux-x86.zip
+    # TODO: should cargo releases be manual ? just in case it fails on another platform?
+    # - uses: rust-lang/crates-io-auth-action@v1
+    #   id: auth
+    # - run: cargo publish
+    #   env:
+    #     CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}

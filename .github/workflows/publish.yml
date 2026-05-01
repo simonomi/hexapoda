@@ -12,7 +12,8 @@ jobs:
     - uses: actions/checkout@v6
     - name: check version
       # cut off the v part of the tag to only search for the number
-      run: grep -q "$(echo "${{ github.ref_name }}" | cut -c2-)" Cargo.toml 
+      # include the " = " to not match on main, only v* tags
+      run: grep -q " = \"$(echo "${{ github.ref_name }}" | cut -c2-)\"" Cargo.toml 
     - uses: rust-lang/crates-io-auth-action@v1
       id: auth
     - run: cargo publish

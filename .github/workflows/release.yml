@@ -1,0 +1,45 @@
+name: release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ${{ matrix.info.runs-on }}
+    strategy:
+      matrix:
+        info:
+          - os: "macOS"
+            runs-on: "macos-latest"
+            executable-extension: ""
+          - os: "linux-x86"
+            runs-on: "ubuntu-latest"
+            executable-extension: ""
+          - os: "linux-arm"
+            runs-on: "ubuntu-24.04-arm"
+            executable-extension: ""
+          - os: "Windows"
+            runs-on: "windows-latest"
+            executable-extension: ".exe"
+    steps:
+    - uses: actions/checkout@v6
+    - name: check version
+      # cut off the v part of the tag to only search for the number
+      run: grep -q "$(echo "${{ github.ref_name }}" | cut -c2-)" Cargo.toml 
+    - run: cargo test --release
+    - run: cargo build --release --locked
+    - name: package
+      # TODO: include completions/man page
+      run: tar -azcf "hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.zip" -C "target/release/" "hexapoda${{ matrix.info.executable-extension }}"
+    - name: release
+      uses: softprops/action-gh-release@v2
+      with:
+        draft: true
+        name: "${{ github.ref_name }}"
+        files: hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.zip

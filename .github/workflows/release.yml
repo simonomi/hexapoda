@@ -55,7 +55,7 @@ jobs:
         HEXAPODA_MANPAGE: manpage
     - name: package-tar-gz
       if: ${{ matrix.info.package-extension == 'tar.gz' }}
-      run: tar --create --gzip --file "hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.tar.gz" -C "target/release/" "hexapoda${{ matrix.info.executable-extension }}" -C "." "completions" "manpage"
+      run: tar --create --gzip --file "hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.tar.gz" "completions" "manpage" -C "target/release/" "hexapoda${{ matrix.info.executable-extension }}"
     - name: package-zip
       if: ${{ matrix.info.package-extension == 'zip' }}
       run: |

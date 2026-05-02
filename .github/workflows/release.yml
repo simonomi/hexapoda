@@ -55,10 +55,10 @@ jobs:
     - name: build
       run: cargo build --release --locked
     - name: package-tar-gz
-      if: ${{ matrix.info.package-extension == "tar.gz" }}
+      if: ${{ matrix.info.package-extension == 'tar.gz' }}
       run: tar --create --gzip --file "hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.tar.gz" -C "target/release/" "hexapoda${{ matrix.info.executable-extension }}" -C "." "completions" "manpage"
     - name: package-zip
-      if: ${{ matrix.info.package-extension == "zip" }}
+      if: ${{ matrix.info.package-extension == 'zip' }}
       run: |
         mv "target/release/hexapoda${{ matrix.info.executable-extension }}" "."
         zip --recurse-paths "hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.zip" "hexapoda${{ matrix.info.executable-extension }}" "completions" "manpage"

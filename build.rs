@@ -8,13 +8,13 @@ include!("src/arguments.rs");
 
 fn main() -> Result<(), Error> {
 	let completions_folder = match env::var_os("HEXAPODA_COMPLETIONS") {
-		None => return Ok(()),
-		Some(folder) => folder,
+		Some(folder) if !folder.is_empty() => folder,
+		_ => return Ok(()),
 	};
 	
 	let manpage_folder = match env::var_os("HEXAPODA_MANPAGE") {
-		None => return Ok(()),
-		Some(folder) => folder,
+		Some(folder) if !folder.is_empty() => folder,
+		_ => return Ok(()),
 	};
 	
 	let mut command = Arguments::command();

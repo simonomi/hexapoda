@@ -44,6 +44,14 @@ jobs:
     - name: check version
       # cut off the v part of the tag to only search for the number
       run: grep --quiet "$(echo "${{ github.ref_name }}" | cut -c2-)" Cargo.toml 
+    - name: cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: test
       run: cargo test --release
     - name: make completion/manpage folders

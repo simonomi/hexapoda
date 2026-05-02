@@ -46,14 +46,13 @@ jobs:
       run: grep --quiet "$(echo "${{ github.ref_name }}" | cut -c2-)" Cargo.toml 
     - name: test
       run: cargo test --release
-    - name: enable completion/manpage generation
-      run: |
-        mkdir completions
-        export HEXAPODA_COMPLETIONS=completions/
-        mkdir manpage
-        export HEXAPODA_MANPAGE=manpage/
+    - name: make completion/manpage folders
+      run: mkdir completions manpage
     - name: build
       run: cargo build --release --locked
+      env:
+        HEXAPODA_COMPLETIONS: completions
+        HEXAPODA_MANPAGE: manpage
     - name: package-tar-gz
       if: ${{ matrix.info.package-extension == 'tar.gz' }}
       run: tar --create --gzip --file "hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.tar.gz" -C "target/release/" "hexapoda${{ matrix.info.executable-extension }}" -C "." "completions" "manpage"

@@ -98,6 +98,9 @@ impl Default for Config {
 					(keypress("l"), GotoLineEnd.into()),
 					
 					(keypress("g"), GotoFileStart.into()),
+					
+					(keypress("p"), PreviousBuffer.into()),
+					(keypress("n"), NextBuffer.into()),
 				].into()),
 				(Some(PartialAction::View), [
 					(keypress("z"), AlignViewCenter.into()),
@@ -230,6 +233,9 @@ impl Default for Config {
 					(keypress("l"), ExtendLineEnd.into()),
 					
 					(keypress("g"), ExtendFileStart.into()),
+					
+					(keypress("p"), PreviousBuffer.into()),
+					(keypress("n"), NextBuffer.into()),
 				].into()),
 				(Some(PartialAction::View), [
 					(keypress("z"), AlignViewCenter.into()),

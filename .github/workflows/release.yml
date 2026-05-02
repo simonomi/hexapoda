@@ -58,9 +58,7 @@ jobs:
       run: tar --create --gzip --file "hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.tar.gz" "completions" "manpage" -C "target/release/" "hexapoda${{ matrix.info.executable-extension }}"
     - name: package-zip
       if: ${{ matrix.info.package-extension == 'zip' }}
-      run: |
-        move "target/release/hexapoda${{ matrix.info.executable-extension }}" "."
-        zip --recurse-paths "hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.zip" "hexapoda${{ matrix.info.executable-extension }}" "completions" "manpage"
+      run: tar --create --auto-compress --file "hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.zip" "completions" "manpage" -C "target/release/" "hexapoda${{ matrix.info.executable-extension }}"
     - name: release
       uses: softprops/action-gh-release@v2
       with:

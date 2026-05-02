@@ -7,20 +7,26 @@ use std::io::Error;
 include!("src/arguments.rs");
 
 fn main() -> Result<(), Error> {
-	let output_folder = match env::var_os("OUT_DIR") {
+	let completions_folder = match env::var_os("HEXAPODA_COMPLETIONS") {
 		None => return Ok(()),
-		Some(output_folder) => output_folder,
+		Some(folder) => folder,
+	};
+	
+	let manpage_folder = match env::var_os("HEXAPODA_MANPAGE") {
+		None => return Ok(()),
+		Some(folder) => folder,
 	};
 	
 	let mut command = Arguments::command();
 	for &shell in Shell::value_variants() {
-		generate_to(shell, &mut command, "hexapoda", &output_folder)?;
+		generate_to(shell, &mut command, "hexapoda", &completions_folder)?;
 	}
-	generate_to(Nushell, &mut command, "hexapoda", &output_folder)?;
+	generate_to(Nushell, &mut command, "hexapoda", &completions_folder)?;
 	
-	clap_mangen::generate_to(command, &output_folder)?;
+	clap_mangen::generate_to(command, &manpage_folder)?;
 	
-	println!("cargo:warning=completions and manpage generated in {output_folder:?}");
+	println!("cargo:warning=completions generated in {completions_folder:?}");
+	println!("cargo:warning=manpage generated in {manpage_folder:?}");
 	println!("cargo:rerun-if-changed=src/arguments.rs");
 	
 	Ok(())

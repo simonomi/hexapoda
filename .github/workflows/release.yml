@@ -6,46 +6,84 @@ on:
     tags:
       - "v*"
 
-permissions:
-  contents: write
-
 jobs:
   release:
     runs-on: ${{ matrix.info.runs-on }}
+    permissions:
+      contents: write
     strategy:
       matrix:
         info:
           - os: "macOS-arm"
             runs-on: "macos-latest"
+            package-extension: "tar.gz"
             executable-extension: ""
           - os: "macOS-intel"
             runs-on: "macos-26-intel"
+            package-extension: "tar.gz"
             executable-extension: ""
           - os: "linux-x86_64"
             runs-on: "ubuntu-latest"
+            package-extension: "tar.gz"
             executable-extension: ""
           - os: "linux-arm"
             runs-on: "ubuntu-24.04-arm"
+            package-extension: "tar.gz"
             executable-extension: ""
           - os: "Windows-x86_64"
             runs-on: "windows-latest"
+            package-extension: "zip"
             executable-extension: ".exe"
           - os: "Windows-arm"
             runs-on: "windows-11-arm"
+            package-extension: "zip"
             executable-extension: ".exe"
     steps:
-    - uses: actions/checkout@v6
+    - name: checkout
+      uses: actions/checkout@v6
     - name: check version
       # cut off the v part of the tag to only search for the number
-      run: grep -q "$(echo "${{ github.ref_name }}" | cut -c2-)" Cargo.toml 
-    - run: cargo test --release
-    - run: cargo build --release --locked
-    - name: package
-      # TODO: include completions/man page
-      run: tar -azcf "hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.zip" -C "target/release/" "hexapoda${{ matrix.info.executable-extension }}"
+      run: grep --quiet "$(echo "${{ github.ref_name }}" | cut -c2-)" Cargo.toml 
+    - name: test
+      run: cargo test --release
+    - name: enable completion/manpage generation
+      run: |
+        mkdir completions
+        export HEXAPODA_COMPLETIONS=completions/
+        mkdir manpage
+        export HEXAPODA_MANPAGE=manpage/
+    - name: build
+      run: cargo build --release --locked
+    - name: package-tar-gz
+      if: ${{ matrix.info.package-extension == "tar.gz" }}
+      run: tar --create --gzip --file "hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.tar.gz" -C "target/release/" "hexapoda${{ matrix.info.executable-extension }}" -C "." "completions" "manpage"
+    - name: package-zip
+      if: ${{ matrix.info.package-extension == "zip" }}
+      run: |
+        mv "target/release/hexapoda${{ matrix.info.executable-extension }}" "."
+        zip --recurse-paths "hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.zip" "hexapoda${{ matrix.info.executable-extension }}" "completions" "manpage"
     - name: release
       uses: softprops/action-gh-release@v2
       with:
         draft: true
         name: "${{ github.ref_name }}"
-        files: hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.zip
+        files: "hexapoda-${{ matrix.info.os }}-${{ github.ref_name }}.${{ matrix.info.package-extension }}"
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - run: echo "publish here!"
+    # permissions:
+    #   id-token: write # Required for OIDC token exchange
+    # steps:
+    # - uses: actions/checkout@v6
+    # - name: check version
+    #   # cut off the v part of the tag to only search for the number
+    #   # include the " = " to not match on main, only v* tags
+    #   run: grep -q " = \"$(echo "${{ github.ref_name }}" | cut -c2-)\"" Cargo.toml 
+    # - uses: rust-lang/crates-io-auth-action@v1
+    #   id: auth
+    # - run: cargo publish
+    #   env:
+    #     CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}

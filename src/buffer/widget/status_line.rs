@@ -1,18 +1,16 @@
 use crate::{buffer::{Buffer, Mode}, utilities::CustomGreys};
-use ratatui::{style::{Color, Stylize}, text::{Line, Span, Text}};
+use ratatui::{style::{Color, Stylize}, text::{Line, Span}};
 
 impl Buffer {
-	pub fn render_status_line(&self) -> Text<'_> {
-		Text::from(
-			Line::from_iter([
-				self.render_mode(),
-				" ".into(),
-				self.render_file_name(),
-				self.modified_indicator(),
-				"  ".into(),
-				self.alert_message.clone()
-			])
-		)
+	pub fn render_status_line(&self) -> Line<'_> {
+		Line::from_iter([
+			self.render_mode(),
+			" ".into(),
+			self.render_file_name(),
+			self.modified_indicator(),
+			"  ".into(),
+			self.alert_message.clone()
+		])
 		.bg(Color::ui_grey())
 	}
 	

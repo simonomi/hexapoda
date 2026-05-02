@@ -8,7 +8,7 @@ impl App {
 			self.quit();
 		} else {
 			self.buffers[self.current_buffer_index].alert_message = Span::from(
-				"there are unsaved changes, use Q to override"
+				"unsaved changes, use <space>w to save or Q to override"
 			).red();
 		}
 	}

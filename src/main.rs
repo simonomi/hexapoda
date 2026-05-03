@@ -25,34 +25,6 @@ const CHUNKS_PER_LINE: usize = BYTES_PER_LINE / BYTES_PER_CHUNK;
 const LINES_OF_PADDING: usize = 5;
 const BYTES_OF_PADDING: usize = LINES_OF_PADDING * BYTES_PER_LINE;
 
-// TODO:
-// - `go` goto entered offset
-// - search
-//   - `/` hex, `A-/` ascii
-//   - if non-hex-digit typed, search ascii
-// - inspector translations for varint
-// - M mark at selected offset? (like Jm)
-// - diffing
-//   - doesn't have to be anything fancy, just compare each byte 1:1
-//   - sync scroll ? sync selections ??
-// - s/A-k/A-K
-//   - sm select marks
-// - C-a/C-x
-// - +/- to edit selected bytes by amount ?
-//   - operate on entire selection (u16/u32/etc)
-//   - hex or decimal ?
-// - modifications
-//   - insert/append
-//     - mode
-//     - add to edit history when *leaving* insert mode
-//   - replace-and-keep-going
-//     - mode
-//   - change
-// - A-r replaces with ASCII
-// - jumplist
-// - p
-// - [/] to cycle view offset?
-
 fn main() {
 	let arguments = Arguments::parse();
 	

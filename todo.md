@@ -1,0 +1,31 @@
+# todo
+- v1.0
+	- `<escape>` dismiss inspectors
+	- `T` Till
+	- click on tab to go to buffer
+	- `go` goto entered offset
+	- search
+		- `/` hex, `A-/` ASCII
+		- if non-hex-digit typed, search ASCII
+- inspector translations for varint [#1](https://github.com/simonomi/hexapoda/issues/1#issue-4232822634)
+- `M` mark at selected offset? (like `Jm`)
+- diffing
+	- doesn't have to be anything fancy, just compare each byte 1:1
+	- sync scroll ? sync selections ??
+- `s`/`A-k`/`A-K`
+	- sm select marks
+- `C-a`/`C-x`
+- `+`/`-` to edit selected bytes by amount ?
+	- operate on entire selection (u16/u32/etc)
+	- hex or decimal ?
+- modifications
+	- insert/append
+		- mode
+		- add to edit history when *leaving* insert mode
+	- replace-and-keep-going
+		- mode
+	- change (basically `dh`)
+	- `p` put
+- `A-r` replaces with ASCII
+- jumplist (`C-o`/`C-i`)
+- `[`/`]` to cycle view offset?

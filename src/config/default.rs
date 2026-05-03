@@ -98,6 +98,8 @@ impl Default for Config {
 					(keypress("l"), GotoLineEnd.into()),
 					
 					(keypress("g"), GotoFileStart.into()),
+					(keypress("i"), GotoFileStart.into()),
+					(keypress("k"), GotoFileEnd.into()),
 					
 					(keypress("p"), PreviousBuffer.into()),
 					(keypress("n"), NextBuffer.into()),
@@ -156,6 +158,7 @@ impl Default for Config {
 					(keypress("Q"), Quit.into()),
 					
 					(keypress("v"), NormalMode.into()),
+					(keypress("escape"), NormalMode.into()),
 					
 					(keypress("g"), Goto.into()),
 					(keypress("z"), View.into()),
@@ -233,6 +236,8 @@ impl Default for Config {
 					(keypress("l"), ExtendLineEnd.into()),
 					
 					(keypress("g"), ExtendFileStart.into()),
+					(keypress("i"), ExtendFileStart.into()),
+					(keypress("k"), ExtendFileEnd.into()),
 					
 					(keypress("p"), PreviousBuffer.into()),
 					(keypress("n"), NextBuffer.into()),

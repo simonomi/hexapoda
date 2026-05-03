@@ -250,7 +250,8 @@ impl App {
 	fn mouse_event_position(&self, mouse_event: MouseEvent) -> Option<usize> {
 		let tab_bar_rows = usize::from(self.buffers.len() > 1);
 		
-		if usize::from(mouse_event.row) - tab_bar_rows >= self.window_size.hex_rows() {
+		if usize::from(mouse_event.row) < tab_bar_rows ||
+		   usize::from(mouse_event.row) - tab_bar_rows >= self.window_size.hex_rows() {
 			return None;
 		}
 		

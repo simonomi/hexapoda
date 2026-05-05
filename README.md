@@ -1,4 +1,4 @@
-# <img height=40 align=top src="https://github.com/simonomi/hexapoda/blob/main/icon/bug%20colored%20large.png?raw=true"> hexapoda
+# <img height=40 align=top src="https://github.com/simonomi/hexapoda/blob/main/icon/bug%20colored%20large.png?raw=true"> [hexapoda](https://simonomi.dev/hexapoda)
 
 a colorful modal hex editor
 
@@ -8,24 +8,13 @@ a colorful modal hex editor
 
 ## status
 
-currently, hexapoda is very unpolished, and missing some major features. if you'd be interested in using it, please let me know! if enough people want, i'd be willing to make it more accessible and write some docs
+still missing some notable features (see [todo.md](https://github.com/simonomi/hexapoda/blob/main/todo.md)), but ready for general use. visit [the website](https://simonomi.dev/hexapoda) for more detailed documentation
 
-## features
+## installation
 
-- [color-codes bytes](https://simonomi.dev/blog/color-code-your-bytes) by value
-- modal editing
-	- selection-first, like [Kakoune](https://kakoune.org) and [Helix](https://helix-editor.com)
-- multiple selections
-	- split selection(s) into #-byte chunks
-- undo/redo
-- inspect the current selection(s)
-	- signed, unsigned, binary, fixed-point, UTF-8, color
-- mark notable offsets
-- jump to selected offset
+- short answer: `cargo binstall hexapoda` or `cargo install hexapoda`
+- [slightly longer answer](https://simonomi.dev/hexapoda/install)
 
-### notable features that are missing (for now)
+## config
 
-- search
-- diffing
-- inserting bytes
-	- only replacing and deleting right now
+see [https://simonomi.dev/hexapoda/config](https://simonomi.dev/hexapoda/config)

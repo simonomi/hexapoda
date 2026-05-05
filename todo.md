@@ -7,6 +7,8 @@
 	- search
 		- `/` hex, `A-/` ASCII
 		- if non-hex-digit typed, search ASCII
+	- `A-*` repeat (entered number) times
+- copy/paste (`<space>y`/`<space>p`)
 - inspector translations for varint [#1](https://github.com/simonomi/hexapoda/issues/1#issue-4232822634)
 - `M` mark at selected offset? (like `Jm`)
 - diffing

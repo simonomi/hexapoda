@@ -15,6 +15,8 @@ still missing some notable features (see [todo.md](https://github.com/simonomi/h
 - short answer: `cargo binstall hexapoda` or `cargo install hexapoda`
 - [slightly longer answer](https://simonomi.dev/hexapoda/install)
 
+if someone would like to submit a pull request for hexapoda to be added to [Homebrew](https://brew.sh), you can base yours off [the one i made](https://github.com/Homebrew/homebrew-core/pull/281093) before realizing it doesn't meet [the notability requirements](https://docs.brew.sh/Acceptable-Formulae#niche-or-self-submitted-stuff) to be self-submitted 😅
+
 ## config
 
 see [https://simonomi.dev/hexapoda/config](https://simonomi.dev/hexapoda/config)

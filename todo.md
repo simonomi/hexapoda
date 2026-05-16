@@ -1,6 +1,5 @@
 # todo
 - v1.0
-	- `<escape>` dismiss inspectors
 	- `T` Till
 	- click on tab to go to buffer
 	- `go` goto entered offset

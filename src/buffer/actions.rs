@@ -72,6 +72,8 @@ impl Buffer {
 			
 			BufferAction::InspectSelection => self.inspect_selection(),
 			BufferAction::InspectSelectionColor => self.inspect_selection_color(),
+			
+			BufferAction::StopInspecting => {},
 		}
 	}
 	

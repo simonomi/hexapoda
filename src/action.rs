@@ -190,6 +190,8 @@ pub enum BufferAction {
 	
 	InspectSelection,
 	InspectSelectionColor,
+	
+	StopInspecting,
 }
 
 impl BufferAction {
@@ -264,6 +266,8 @@ impl BufferAction {
 			
 			InspectSelection => true,
 			InspectSelectionColor => true,
+			
+			StopInspecting => true,
 		}
 	}
 }
@@ -339,6 +343,8 @@ impl From<BufferAction> for &str {
 			
 			InspectSelection => "inspect_selection",
 			InspectSelectionColor => "inspect_selection_color",
+			
+			StopInspecting => "stop_inspecting",
 		}
 	}
 }
@@ -422,6 +428,8 @@ impl TryFrom<&str> for BufferAction {
 			
 			"inspect_selection" => Ok(InspectSelection),
 			"inspect_selection_color" => Ok(InspectSelectionColor),
+			
+			"stop_inspecting" => Ok(StopInspecting),
 			
 			_ => Err(()),
 		}

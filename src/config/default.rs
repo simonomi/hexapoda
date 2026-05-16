@@ -92,6 +92,8 @@ impl Default for Config {
 					
 					(keypress("C- "), InspectSelection.into()),
 					(keypress("A- "), InspectSelectionColor.into()),
+					
+					(keypress("escape"), StopInspecting.into()),
 				].into()),
 				(Some(PartialAction::Goto), [
 					(keypress("j"), GotoLineStart.into()),

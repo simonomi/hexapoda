@@ -1,7 +1,6 @@
 # todo
 - v1.0
 	- `T` Till
-	- click on tab to go to buffer
 	- `go` goto entered offset
 	- search
 		- `/` hex, `A-/` ASCII

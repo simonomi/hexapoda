@@ -198,6 +198,7 @@ impl App {
 	
 	fn handle_mouse(&mut self, mouse_event: MouseEvent) -> bool {
 		let position = self.mouse_event_position(mouse_event);
+		let tab_bar_row_count = u16::from(self.buffers.len() > 1);
 		let current_buffer = &mut self.buffers[self.current_buffer_index];
 		
 		match mouse_event.kind {
@@ -207,6 +208,8 @@ impl App {
 					current_buffer.cursors.clear();
 					current_buffer.clamp_screen_to_primary_cursor(self.window_size);
 					self.is_dragging_mouse = true;
+				} else if mouse_event.row < tab_bar_row_count {
+					self.switch_to_tab_at(mouse_event.column);
 				}
 				
 				true
@@ -248,10 +251,10 @@ impl App {
 	}
 	
 	fn mouse_event_position(&self, mouse_event: MouseEvent) -> Option<usize> {
-		let tab_bar_rows = usize::from(self.buffers.len() > 1);
+		let tab_bar_row_count = usize::from(self.buffers.len() > 1);
 		
-		if usize::from(mouse_event.row) < tab_bar_rows ||
-		   usize::from(mouse_event.row) - tab_bar_rows >= self.window_size.hex_rows() {
+		if usize::from(mouse_event.row) < tab_bar_row_count ||
+		   usize::from(mouse_event.row) - tab_bar_row_count >= self.window_size.hex_rows() {
 			return None;
 		}
 		
@@ -283,20 +286,23 @@ impl App {
 		
 		byte_column.map(|byte_column| {
 			current_buffer.scroll_position +
-			(mouse_event.row as usize - tab_bar_rows) * BYTES_PER_LINE +
+			(mouse_event.row as usize - tab_bar_row_count) * BYTES_PER_LINE +
 			byte_column
 		})
+	}
+	
+	fn switch_to_tab_at(&mut self, column: u16) {
+		let mut column: usize = column.into();
 		
-		// if let Some(byte_column) = byte_column &&
-		// 	mouse_event.row as usize - tab_bar_rows < self.window_size.hex_rows()
-		// {
-		// 	Some(
-		// 		current_buffer.scroll_position +
-		// 		(mouse_event.row as usize - tab_bar_rows) * BYTES_PER_LINE +
-		// 		byte_column
-		// 	)
-		// } else {
-		// 	None
-		// }
+		for buffer_index in 0..self.buffers.len() {
+			let tab_width = self.buffers[buffer_index].file_name.len() + 2;
+			
+			if column < tab_width {
+				self.current_buffer_index = buffer_index;
+				return;
+			}
+			
+			column -= tab_width;
+		}
 	}
 }

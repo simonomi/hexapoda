@@ -949,11 +949,10 @@ const fn is_illegal_control_character(character: char) -> bool {
 	}
 }
 
-const fn color555_to_color888(color555: u16) -> [u8; 3] {
+fn color555_to_color888(color555: u16) -> [u8; 3] {
 	[
-		// 8 is the ratio between the number of colors in 555 vs 888 (32:256)
-		(color555       & 0b11111) as u8 * 8,
-		(color555 >>  5 & 0b11111) as u8 * 8,
-		(color555 >> 10 & 0b11111) as u8 * 8
+		(u8::try_from((color555       & 0b11111) * 255 / 31).unwrap()),
+		(u8::try_from((color555 >>  5 & 0b11111) * 255 / 31).unwrap()),
+		(u8::try_from((color555 >> 10 & 0b11111) * 255 / 31).unwrap())
 	]
 }

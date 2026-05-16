@@ -205,6 +205,9 @@ impl Default for Config {
 					(keypress("u"), Undo.into()),
 					(keypress("U"), Redo.into()),
 					
+					(keypress("C-j"), PreviousBuffer.into()),
+					(keypress("C-l"), NextBuffer.into()),
+					
 					(keypress("C"), CopySelectionOnNextLine.into()),
 					
 					(keypress("("), RotateSelectionsBackward.into()),

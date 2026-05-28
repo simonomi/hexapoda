@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fs::File, io::{self, Read}, path::PathBuf};
+use std::{collections::HashSet, fs::File, io::{self, Read}, path::{Path, PathBuf}};
 use crossterm::event::KeyEvent;
 use ratatui::{style::Stylize, text::Span};
 use serde::{Deserialize, Serialize};
@@ -75,7 +75,9 @@ impl TryFrom<&str> for PartialAction {
 }
 
 impl Buffer {
-	pub fn from_file_at(file_path: PathBuf) -> io::Result<Self> {
+	pub fn from_file_at(file_path: &Path) -> io::Result<Self> {
+		let file_path = file_path.canonicalize()?;
+		
 		let mut file = File::open(&file_path)?;
 		let mut contents = Vec::new();
 		file.read_to_end(&mut contents)?;

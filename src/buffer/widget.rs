@@ -10,6 +10,9 @@ mod extra_statuses;
 
 impl Widget for &Buffer {
 	fn render(self, area: Rect, buf: &mut ratatui::buffer::Buffer) {
+		// set OSC 6 (current document)
+		print!("\x1B]6;{}\x07", self.file_path.display());
+		
 		let screen_end = self.scroll_position + BYTES_PER_LINE * (area.height as usize - 1);
 		let bytes_end = min(screen_end, self.contents.len());
 		

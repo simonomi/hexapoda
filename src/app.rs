@@ -57,7 +57,7 @@ impl App {
 		let mut buffers: Vec<Buffer> = files
 			.iter()
 			.filter_map(|path| {
-				Buffer::from_file_at(path.clone())
+				Buffer::from_file_at(path)
 					.inspect_err(|error| {
 						error_alert = Some(
 							Span::raw(format!("error reading '{}': {error}", path.display())).red()

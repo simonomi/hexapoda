@@ -5,6 +5,7 @@ use arguments::Arguments;
 use clap::Parser;
 use app::App;
 use crossterm::{QueueableCommand, event::{DisableMouseCapture, EnableMouseCapture}};
+use ratatui::DefaultTerminal;
 use crate::config::Config;
 
 mod app;
@@ -63,9 +64,7 @@ fn main() {
 		should_redraw = app.handle_events(&mut terminal);
 	}
 	
-	terminal.backend_mut().queue(DisableMouseCapture).unwrap();
-	crossterm::terminal::disable_raw_mode().unwrap();
-	ratatui::restore();
+	cleanup_terminal(&mut terminal);
 	
 	// dbg!(app.edit_history);
 	
@@ -79,4 +78,10 @@ fn main() {
 	for log in app.buffers.iter().flat_map(|buffer| &buffer.logs) {
 		println!("{log}");
 	}
+}
+
+fn cleanup_terminal(terminal: &mut DefaultTerminal) {
+	terminal.backend_mut().queue(DisableMouseCapture).unwrap();
+	crossterm::terminal::disable_raw_mode().unwrap();
+	ratatui::restore();
 }

@@ -1,4 +1,4 @@
-use std::{io, path::PathBuf, process::exit, time::Duration};
+use std::{io::{self, IsTerminal, Read, stdin}, path::PathBuf, process::exit, time::Duration};
 use crossterm::{ExecutableCommand, event::{self, DisableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind}, terminal::window_size};
 use ratatui::{DefaultTerminal, style::Stylize, text::Span};
 use crate::{BYTES_PER_LINE, action::AppAction, buffer::Buffer, config::{Config, ConfigInitError}, cursor::Cursor, window_size::WindowSize};
@@ -68,16 +68,14 @@ impl App {
 			.collect();
 		
 		if files.is_empty() {
-			#[cfg(target_os = "macos")] {
+			let mut stdin = stdin();
+			
+			if stdin.is_terminal() {
 				eprintln!("please provide at least one file as input. use --help for options");
 				exit(1);
-			}
-			
-			#[cfg(not(target_os = "macos"))] {
-				use io::{Read, stdin};
-				
+			} else {
 				let mut standard_input = Vec::new();
-				stdin().read_to_end(&mut standard_input).unwrap();
+				stdin.read_to_end(&mut standard_input).unwrap();
 				buffers.push(Buffer::new("-".into(), standard_input));
 			}
 		}
@@ -133,12 +131,15 @@ impl App {
 		let event = event::read()
 			.inspect_err(|error| {
 				#[cfg(target_os = "macos")] {
+					use crate::cleanup_terminal;
 					use io::ErrorKind;
-
+					
 					if error.kind() == ErrorKind::Other {
 						let error_message = error.to_string();
 						if error_message == "Failed to initialize input reader" {
-							eprintln!("reading from stdin on macOS does not work due to a limitation in crossterm. see https://github.com/crossterm-rs/crossterm/issues/396");
+							cleanup_terminal(terminal);
+							
+							eprintln!("unfortunately, reading from stdin on macOS does not work due to a limitation in crossterm. see https://github.com/crossterm-rs/crossterm/issues/396");
 							exit(1);
 						}
 					}

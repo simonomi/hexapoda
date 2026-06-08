@@ -1,6 +1,11 @@
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+use enum_iterator::{all, Sequence};
+
+// TODO: use serde to convert to/from strings instead of manually?
 #[derive(Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(test, derive(Sequence))]
 #[derive(Debug)]
 #[serde(into = "&str")]
 #[serde(try_from = "&str")]
@@ -8,6 +13,24 @@ pub enum Action {
 	App(AppAction),
 	Buffer(BufferAction),
 	Cursor(CursorAction),
+}
+
+#[test]
+#[ignore = "only run manually (cargo test -- --ignored --show-output)"]
+fn export_action_list() {
+	use itertools::Itertools;
+	
+	println!(
+		"[{}]", 
+		all::<Action>()
+			.map(<&str>::from)
+			.map(|action| format!("\"{action}\""))
+			.join(", ")
+	);
+	
+	println!("- modify schema.json");
+	println!("- copy to schema-v#.#.#.json");
+	println!("- remember to update the schema permalink");
 }
 
 impl Action {
@@ -52,6 +75,7 @@ impl TryFrom<&str> for Action {
 
 // actions that act on the app as a whole, not just one buffer
 #[derive(Debug, Clone, Copy, Deserialize)]
+#[cfg_attr(test, derive(Sequence))]
 pub enum AppAction {
 	QuitIfSaved,
 	Quit,
@@ -122,6 +146,7 @@ impl TryFrom<&str> for AppAction {
 }
 
 #[derive(Clone, Copy, Deserialize)]
+#[cfg_attr(test, derive(Sequence))]
 #[derive(Debug)]
 pub enum BufferAction {
 	NormalMode,
@@ -437,6 +462,7 @@ impl TryFrom<&str> for BufferAction {
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(test, derive(Sequence))]
 #[derive(Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum CursorAction {

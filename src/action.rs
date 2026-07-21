@@ -159,6 +159,7 @@ pub enum BufferAction {
 	Repeat,
 	To,
 	GotoOffset,
+	GotoDecimalOffset,
 	
 	ScrollDown,
 	ScrollUp,
@@ -236,6 +237,7 @@ impl BufferAction {
 			Repeat => true,
 			To => false,
 			GotoOffset => true,
+			GotoDecimalOffset => true,
 			
 			ScrollDown => true,
 			ScrollUp => true,
@@ -314,6 +316,7 @@ impl From<BufferAction> for &str {
 			Repeat => "repeat",
 			To => "to",
 			GotoOffset => "goto_offset",
+			GotoDecimalOffset => "goto_decimal_offset",
 			
 			ScrollDown => "scroll_down",
 			ScrollUp => "scroll_up",
@@ -400,6 +403,7 @@ impl TryFrom<&str> for BufferAction {
 			"repeat" => Ok(Repeat),
 			"to" => Ok(To),
 			"goto_offset" => Ok(GotoOffset),
+			"goto_decimal_offset" => Ok(GotoDecimalOffset),
 			
 			"scroll_down" => Ok(ScrollDown),
 			"scroll_up" => Ok(ScrollUp),

@@ -16,6 +16,7 @@ impl Buffer {
 			BufferAction::Repeat => self.repeat(),
 			BufferAction::To => self.to(),
 			BufferAction::GotoOffset => self.goto_offset(window_size),
+			BufferAction::GotoDecimalOffset => self.goto_decimal_offset(window_size),
 			
 			BufferAction::ScrollDown => self.scroll_down(window_size),
 			BufferAction::ScrollUp => self.scroll_up(window_size),
@@ -118,6 +119,16 @@ impl Buffer {
 		self.entry_cursor_index = 0;
 		self.cursor_position = Some(Position {
 			x: u16::try_from(self.entry_cursor_index).unwrap() + 9, // length of entry label
+			y: u16::try_from(window_size.rows).unwrap() - 2
+		});
+	}
+	
+	fn goto_decimal_offset(&mut self, window_size: WindowSize) {
+		self.partial_action = Some(PartialAction::GotoDecimalOffset);
+		self.entry_text = String::new();
+		self.entry_cursor_index = 0;
+		self.cursor_position = Some(Position {
+			x: u16::try_from(self.entry_cursor_index).unwrap() + 7, // length of entry label
 			y: u16::try_from(window_size.rows).unwrap() - 2
 		});
 	}

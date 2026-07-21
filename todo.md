@@ -1,6 +1,5 @@
 # todo
 - v1.0
-	- `gO` goto decimal offset
 	- `T` Till
 	- search
 		- `/` hex, `A-/` ASCII

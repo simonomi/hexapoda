@@ -85,11 +85,17 @@ impl Widget for &Buffer {
 			primary_popup.clone().as_primary().render(primary_popup_area, buf);
 		}
 		
-		if self.partial_action == Some(PartialAction::GotoOffset) {
-			let entry_area = Rect::new(area.x, area.bottom() - 2, area.width, 1);
-			
-			self.render_entry("goto: 0x")
-				.render(entry_area, buf);
+		let entry_area = Rect::new(area.x, area.bottom() - 2, area.width, 1);
+		match self.partial_action {
+			Some(PartialAction::GotoOffset) => {
+				self.render_entry("goto: 0x")
+					.render(entry_area, buf);
+			}
+			Some(PartialAction::GotoDecimalOffset) => {
+				self.render_entry("goto: ")
+					.render(entry_area, buf);
+			}
+			_ => {}
 		}
 	}
 }

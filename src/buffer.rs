@@ -54,7 +54,7 @@ pub enum Mode {
 #[derive(Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum PartialAction {
-	Goto, View, Replace, Space, Repeat, Till, GotoOffset
+	Goto, View, Replace, Space, Repeat, Till, GotoOffset, GotoDecimalOffset
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -156,6 +156,11 @@ impl Buffer {
 			},
 			Some(PartialAction::GotoOffset) => {
 				self.handle_goto_offset(event, window_size);
+				should_redraw = true;
+				None
+			}
+			Some(PartialAction::GotoDecimalOffset) => {
+				self.handle_goto_decimal_offset(event, window_size);
 				should_redraw = true;
 				None
 			}
@@ -378,6 +383,69 @@ impl Buffer {
 		self.cursor_position = self.partial_action.is_some()
 			.then(|| Position {
 				x: u16::try_from(self.entry_cursor_index).unwrap() + 9, // length of entry label
+				y: u16::try_from(window_size.rows).unwrap() - 2
+			});
+	}
+	
+	fn handle_goto_decimal_offset(
+		&mut self,
+		event: KeyEvent,
+		window_size: WindowSize
+	) {
+		if let Some(hex_character) = event.code.as_char() &&
+		   hex_character.is_ascii_digit()
+		{
+			self.entry_text.insert(self.entry_cursor_index, hex_character);
+			self.entry_cursor_index += 1;
+		} else {
+			match event.code {
+				KeyCode::Backspace => {
+					if self.entry_cursor_index > 0 {
+						self.entry_text.remove(self.entry_cursor_index - 1);
+						self.entry_cursor_index -= 1;
+					}
+				}
+				KeyCode::Delete => {
+					if self.entry_cursor_index < self.entry_text.len() {
+						self.entry_text.remove(self.entry_cursor_index);
+					}
+				}
+				KeyCode::Left => {
+					if self.entry_cursor_index > 0 {
+						self.entry_cursor_index -= 1;
+					}
+				}
+				KeyCode::Right => {
+					if self.entry_cursor_index < self.entry_text.len() {
+						self.entry_cursor_index += 1;
+					}
+				}
+				KeyCode::Enter => {
+					// entry_text should always be 0-9a-fA-F
+					let entered_offset = self.entry_text.parse().unwrap();
+					
+					if entered_offset < self.contents.len() {
+						self.primary_cursor = Cursor::at(entered_offset);
+						self.cursors.clear();
+						
+						self.clamp_screen_to_primary_cursor(window_size);
+					} else {
+						self.alert_message = Span::from(
+							"offset out of bounds"
+						).red();
+					}
+					
+					self.partial_action = None;
+				}
+				_ => {
+					self.partial_action = None;
+				}
+			}
+		}
+		
+		self.cursor_position = self.partial_action.is_some()
+			.then(|| Position {
+				x: u16::try_from(self.entry_cursor_index).unwrap() + 7, // length of entry label
 				y: u16::try_from(window_size.rows).unwrap() - 2
 			});
 	}

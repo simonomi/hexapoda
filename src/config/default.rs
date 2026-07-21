@@ -107,6 +107,7 @@ impl Default for Config {
 					(keypress("n"), NextBuffer.into()),
 					
 					(keypress("o"), GotoOffset.into()),
+					(keypress("O"), GotoDecimalOffset.into()),
 				].into()),
 				(Some(PartialAction::View), [
 					(keypress("z"), AlignViewCenter.into()),
@@ -250,6 +251,7 @@ impl Default for Config {
 					(keypress("n"), NextBuffer.into()),
 					
 					(keypress("o"), GotoOffset.into()),
+					(keypress("O"), GotoDecimalOffset.into()),
 				].into()),
 				(Some(PartialAction::View), [
 					(keypress("z"), AlignViewCenter.into()),

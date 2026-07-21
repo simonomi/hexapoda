@@ -1,6 +1,6 @@
 use std::{collections::HashSet, fs::File, io::{self, Read}, path::{Path, PathBuf}};
-use crossterm::event::KeyEvent;
-use ratatui::{style::Stylize, text::Span};
+use crossterm::event::{KeyCode, KeyEvent};
+use ratatui::{layout::Position, style::Stylize, text::Span};
 use serde::{Deserialize, Serialize};
 use crate::{BYTES_PER_LINE, action::{Action, AppAction}, buffer::actions::bytes_to_nat, config::Config, cursor::Cursor, edit_action::EditAction, popup::Popup, utilities::IsOverlapping, window_size::WindowSize};
 
@@ -26,6 +26,12 @@ pub struct Buffer {
 	pub alert_message: Span<'static>,
 	pub popups: Vec<Popup>,
 	
+	// used for `go`, `/`, `A-/`, etc
+	pub entry_text: String,
+	pub entry_cursor_index: usize,
+	// where on the screen the cursor is rendered
+	pub cursor_position: Option<Position>,
+	
 	pub inspection_status: Option<InspectionStatus>,
 	
 	pub edit_history: Vec<EditAction>,
@@ -48,7 +54,7 @@ pub enum Mode {
 #[derive(Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum PartialAction {
-	Goto, View, Replace, Space, Repeat, Till
+	Goto, View, Replace, Space, Repeat, Till, GotoOffset
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -105,6 +111,10 @@ impl Buffer {
 			alert_message: "".into(),
 			popups: Vec::new(),
 			
+			entry_text: String::new(),
+			entry_cursor_index: 0,
+			cursor_position: None,
+			
 			inspection_status: None,
 			
 			edit_history: Vec::new(),
@@ -144,6 +154,11 @@ impl Buffer {
 				should_redraw = true;
 				None
 			},
+			Some(PartialAction::GotoOffset) => {
+				self.handle_goto_offset(event, window_size);
+				should_redraw = true;
+				None
+			}
 			_ => {
 				let (app_action, redraw) = self.handle_other_modes(event, config, window_size);
 				should_redraw |= redraw;
@@ -203,8 +218,8 @@ impl Buffer {
 		
 		let mut result = None;
 		
-		let should_reset_partial = self.partial_action.is_some();
-		let mut should_redraw = should_reset_partial;
+		let initial_partial_action = self.partial_action;
+		let mut should_redraw = self.partial_action.is_some();
 		
 		if let Some(mode_config) = config.0.get(&self.mode) &&
 		   let Some(keybinds) = mode_config.0.get(&self.partial_action) &&
@@ -239,7 +254,7 @@ impl Buffer {
 			}
 		}
 		
-		if should_reset_partial {
+		if self.partial_action == initial_partial_action {
 			self.partial_action = None;
 		}
 		
@@ -302,6 +317,69 @@ impl Buffer {
 				}
 			}
 		}
+	}
+	
+	fn handle_goto_offset(
+		&mut self,
+		event: KeyEvent,
+		window_size: WindowSize
+	) {
+		if let Some(hex_character) = event.code.as_char() &&
+		   let Some(_) = nybble_from_hex(hex_character)
+		{
+			self.entry_text.insert(self.entry_cursor_index, hex_character);
+			self.entry_cursor_index += 1;
+		} else {
+			match event.code {
+				KeyCode::Backspace => {
+					if self.entry_cursor_index > 0 {
+						self.entry_text.remove(self.entry_cursor_index - 1);
+						self.entry_cursor_index -= 1;
+					}
+				}
+				KeyCode::Delete => {
+					if self.entry_cursor_index < self.entry_text.len() {
+						self.entry_text.remove(self.entry_cursor_index);
+					}
+				}
+				KeyCode::Left => {
+					if self.entry_cursor_index > 0 {
+						self.entry_cursor_index -= 1;
+					}
+				}
+				KeyCode::Right => {
+					if self.entry_cursor_index < self.entry_text.len() {
+						self.entry_cursor_index += 1;
+					}
+				}
+				KeyCode::Enter => {
+					// entry_text should always be 0-9a-fA-F
+					let entered_offset = usize::from_str_radix(&self.entry_text, 16).unwrap();
+					
+					if entered_offset < self.contents.len() {
+						self.primary_cursor = Cursor::at(entered_offset);
+						self.cursors.clear();
+						
+						self.clamp_screen_to_primary_cursor(window_size);
+					} else {
+						self.alert_message = Span::from(
+							"offset out of bounds"
+						).red();
+					}
+					
+					self.partial_action = None;
+				}
+				_ => {
+					self.partial_action = None;
+				}
+			}
+		}
+		
+		self.cursor_position = self.partial_action.is_some()
+			.then(|| Position {
+				x: u16::try_from(self.entry_cursor_index).unwrap() + 9, // length of entry label
+				y: u16::try_from(window_size.rows).unwrap() - 2
+			});
 	}
 	
 	pub const fn has_unsaved_changes(&self) -> bool {

@@ -59,6 +59,15 @@ fn main() {
 			terminal.draw(|frame| {
 				frame.render_widget(&app, frame.area());
 			}).unwrap();
+			
+			let current_buffer = &app.buffers[app.current_buffer_index];
+			
+			if let Some(cursor_position) = current_buffer.cursor_position {
+				terminal.set_cursor_position(cursor_position).unwrap();
+				terminal.show_cursor().unwrap();
+			} else {
+				terminal.hide_cursor().unwrap();
+			}
 		}
 		
 		should_redraw = app.handle_events(&mut terminal);

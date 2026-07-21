@@ -1,6 +1,6 @@
 use std::{cmp::min, convert::identity, fs::File, io::Write, iter, mem::{replace, swap}};
 use itertools::Itertools;
-use ratatui::{style::{Color, Stylize}, text::Span};
+use ratatui::{layout::Position, style::{Color, Stylize}, text::Span};
 use crate::{BYTES_OF_PADDING, BYTES_PER_LINE, LINES_OF_PADDING, action::BufferAction, buffer::{Buffer, InspectionStatus, Mode, PartialAction}, cursor::Cursor, edit_action::EditAction, popup::Popup, utilities::{Floorable, SaturatingSubtract}, window_size::WindowSize};
 
 impl Buffer {
@@ -15,6 +15,7 @@ impl Buffer {
 			BufferAction::Space => self.space(),
 			BufferAction::Repeat => self.repeat(),
 			BufferAction::To => self.to(),
+			BufferAction::GotoOffset => self.goto_offset(window_size),
 			
 			BufferAction::ScrollDown => self.scroll_down(window_size),
 			BufferAction::ScrollUp => self.scroll_up(window_size),
@@ -109,6 +110,16 @@ impl Buffer {
 	
 	const fn to(&mut self) {
 		self.partial_action = Some(PartialAction::Till);
+	}
+	
+	fn goto_offset(&mut self, window_size: WindowSize) {
+		self.partial_action = Some(PartialAction::GotoOffset);
+		self.entry_text = String::new();
+		self.entry_cursor_index = 0;
+		self.cursor_position = Some(Position {
+			x: u16::try_from(self.entry_cursor_index).unwrap() + 9, // length of entry label
+			y: u16::try_from(window_size.rows).unwrap() - 2
+		});
 	}
 	
 	pub fn scroll_down(&mut self, window_size: WindowSize) {

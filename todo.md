@@ -1,7 +1,7 @@
 # todo
 - v1.0
+	- `gO` goto decimal offset
 	- `T` Till
-	- `go` goto entered offset
 	- search
 		- `/` hex, `A-/` ASCII
 		- if non-hex-digit typed, search ASCII
@@ -9,6 +9,7 @@
 - copy/paste (`<space>y`/`<space>p`)
 - inspector translations for varint [#1](https://github.com/simonomi/hexapoda/issues/1#issue-4232822634)
 - `M` mark at selected offset? (like `Jm`)
+- allow +/- in `go`/`gO` (eg c0+80)
 - diffing
 	- doesn't have to be anything fancy, just compare each byte 1:1
 	- sync scroll ? sync selections ??

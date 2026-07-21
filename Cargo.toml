@@ -1,6 +1,5 @@
 [package]
 name = "hexapoda"
-# if run manually, CI will check for the string "ain" (lol), so here you go :)
 version = "0.2.4"
 description = "a colorful modal hex editor"
 repository = "https://github.com/simonomi/hexapoda"

@@ -29,6 +29,7 @@ impl PartialAction {
 			Space => "␠",
 			Repeat => "×",
 			Till => "t",
+			GotoOffset => "",
 		}
 	}
 }

@@ -1,12 +1,13 @@
 use std::{cmp::min, iter};
 use ratatui::{layout::Rect, text::{Line, Text}, widgets::Widget};
-use crate::{BYTES_PER_LINE, buffer::Buffer};
+use crate::{BYTES_PER_LINE, buffer::{Buffer, PartialAction}};
 
 mod address;
 mod hex;
 mod character_panel;
 mod status_line;
 mod extra_statuses;
+mod entry;
 
 impl Widget for &Buffer {
 	fn render(self, area: Rect, buf: &mut ratatui::buffer::Buffer) {
@@ -84,12 +85,12 @@ impl Widget for &Buffer {
 			primary_popup.clone().as_primary().render(primary_popup_area, buf);
 		}
 		
-		// if self.partial_action == Some(PartialAction::Space) {
-		// 	let input_field_area = Rect::new(area.x, area.bottom() - 2, area.width, 1);
-		// 	Span::from("/0F673 ")
-		// 		.on_dark_gray()
-		// 		.render(input_field_area, buf);
-		// }
+		if self.partial_action == Some(PartialAction::GotoOffset) {
+			let entry_area = Rect::new(area.x, area.bottom() - 2, area.width, 1);
+			
+			self.render_entry("goto: 0x")
+				.render(entry_area, buf);
+		}
 	}
 }
 

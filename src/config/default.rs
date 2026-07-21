@@ -105,6 +105,8 @@ impl Default for Config {
 					
 					(keypress("p"), PreviousBuffer.into()),
 					(keypress("n"), NextBuffer.into()),
+					
+					(keypress("o"), GotoOffset.into()),
 				].into()),
 				(Some(PartialAction::View), [
 					(keypress("z"), AlignViewCenter.into()),
@@ -246,6 +248,8 @@ impl Default for Config {
 					
 					(keypress("p"), PreviousBuffer.into()),
 					(keypress("n"), NextBuffer.into()),
+					
+					(keypress("o"), GotoOffset.into()),
 				].into()),
 				(Some(PartialAction::View), [
 					(keypress("z"), AlignViewCenter.into()),
